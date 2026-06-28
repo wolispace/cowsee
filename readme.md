@@ -48,25 +48,26 @@ A Server Side Events version of COW
 ```
 {
   message: "A message with {{replaceable}} params like {{AK}} pushed {{dJ2}}",
+  relook: true,
   objects: {
-    "AK": {class: "buffallow", longname: "a large white buffallow", host: "Ge", hosthow: "beside" ...},
+    "AK": {class: "buffallo", longname: "a large white buffallo", host: "Ge", hosthow: "beside" ...},
     "d32": { ...}
   }
+  host: {"AK":["d32", "on"], ...}
+
 }
 ```
+name
 longname
 info
 link
-loc
-lookhow
 face
 facehow
-colour
-owner
-upd_time
-name
 host
 hosthow
+colour
+
+
 
 
 ## Parsing

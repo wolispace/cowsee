@@ -1,6 +1,6 @@
 import { Queue } from './Queue.js';
 
-export class CommandManager extends Queue{
+export class CommandManager extends Queue {
 
   constructor(tickManager) {
     super();
@@ -23,12 +23,45 @@ export class CommandManager extends Queue{
    * Take the next command off the queue and parse it and process the bits
    */
   doNext() {
-      if (this.pending()) {
-        const command = this.get();
-        // parse command
-        // usualy this involves send in message back to the user
-        const message = command;
-        this.tickManager.messageManager.add(message);
-      }
+    if (this.pending()) {
+      const command = this.get();
+      this.parse(command.cmd);
+      // // parse command
+      // // usualy this involves send in message back to the user
+      // const message = command;
+      // this.tickManager.messageManager.add(message);
+    }
   }
+
+  actions = {
+    look: (rest) => {
+      this.tickManager.messageManager.add(`Looked around`);
+    },
+    create: (rest) => {
+      this.tickManager.messageManager.add(`Created: ${rest}`);
+    },
+    build: (rest) => {
+      this.tickManager.messageManager.add(`Built: ${rest}`);
+    },
+    drop: (rest) => {
+      this.tickManager.messageManager.add(`Dropped: ${rest}`);
+    },
+    get: (rest) => {
+      this.tickManager.messageManager.add(`Got: ${rest}`);
+    },
+  };
+
+  parse(command) {
+    if (!command) return;
+    const [action, ...rest] = command.trim().split(/\s+/);
+    const handler = this.actions[action];
+
+    if (!handler) {
+      this.tickManager.messageManager.add(`Did ${command}`);
+    } else {
+      handler(rest.join(" "));
+    }
+
+  }
+
 }

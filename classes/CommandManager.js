@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Queue } from './Queue.js';
 
 export class CommandManager extends Queue {
@@ -25,15 +27,132 @@ export class CommandManager extends Queue {
   doNext() {
     if (this.pending()) {
       const command = this.get();
-      this.parse(command.cmd);
-      // // parse command
-      // // usualy this involves send in message back to the user
-      // const message = command;
-      // this.tickManager.messageManager.add(message);
+      command.actor = 'z'; // DEBUG - player is wolis
+      this.parse(command);
     }
-  };
+  }
 
-  cowmandList = {
+  statementList = {
+    // 1. GET handler
+    get: (rest, context, subs, manager) => {
+      let getLocVar = 'loc';
+      let variablesPart = rest;
+      const inMatch = rest.match(/(.+)\s+in\s+\$(\w+)/i);
+      if (inMatch) {
+        variablesPart = inMatch[1].trim();
+        getLocVar = inMatch[2];
+      }
+
+      const getLocValue = context[getLocVar] || '';
+      const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
+
+      if (variables.length === 3) {
+        const relWords = ['to', 'on', 'in', 'at', 'under', 'towards'];
+        const relRegex = new RegExp(`^(.*?)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
+        const match = context.cmd_text.match(relRegex);
+        if (match) {
+          context[variables[0]] = match[1].trim(); // text
+          context[variables[1]] = match[2].trim(); // rel
+          const rawTarget = match[3].trim();
+          context[variables[2]] = manager.resolveTarget(rawTarget, getLocValue);
+        } else {
+          context[variables[0]] = context.cmd_text;
+          context[variables[1]] = '';
+          context[variables[2]] = 0;
+        }
+      } else if (variables.length === 1) {
+        context[variables[0]] = context.cmd_text;
+      }
+    },
+
+    // 2. IF/THEN/ELSE handler
+    if: (rest, context, subs, manager) => {
+      const ifMatch = rest.match(/^(.+?)\s+(equals|is|like|in|eq|ne|>|<|!=|>=|<=|=|==)\s+(.+?)\s+then\s+(.+)$/i);
+      if (!ifMatch) return;
+
+      const op1Raw = ifMatch[1].trim();
+      const operator = ifMatch[2].toLowerCase();
+      const op2Raw = ifMatch[3].trim();
+      const actionsPart = ifMatch[4].trim();
+
+      const val1 = manager.resolveValue(op1Raw, context);
+      const val2 = manager.resolveValue(op2Raw, context);
+
+      let conditionMet = false;
+      if (['>', '<', '>=', '<='].includes(operator)) {
+        const num1 = parseFloat(val1) || 0;
+        const num2 = parseFloat(val2) || 0;
+        if (operator === '>') conditionMet = num1 > num2;
+        if (operator === '<') conditionMet = num1 < num2;
+        if (operator === '>=') conditionMet = num1 >= num2;
+        if (operator === '<=') conditionMet = num1 <= num2;
+      } else if (operator === 'like') {
+        const cleanVal2 = val2.toString().replace(/^['"]|['"]$/g, '');
+        conditionMet = val1.toString().toLowerCase().includes(cleanVal2.toLowerCase());
+      } else {
+        const eq = (val1.toString() === val2.toString());
+        conditionMet = (operator === 'ne' || operator === '!=') ? !eq : eq;
+      }
+
+      const elseIndex = actionsPart.indexOf(' else ');
+      let thenSub, elseSub;
+      if (elseIndex !== -1) {
+        thenSub = actionsPart.substring(0, elseIndex).trim();
+        elseSub = actionsPart.substring(elseIndex + 6).trim();
+      } else {
+        thenSub = actionsPart;
+        elseSub = '';
+      }
+
+      if (conditionMet) {
+        if (thenSub) manager.runSub(thenSub, context, subs);
+      } else {
+        if (elseSub) manager.runSub(elseSub, context, subs);
+      }
+    },
+
+    // 3. VAR handler
+    var: (rest, context, subs, manager) => {
+      const cleanRest = rest.replace(/^var\s+/i, '');
+      const varMatch = cleanRest.match(/^(\$\w+)\s+(?:to|=)\s+(.+)$/i);
+      if (!varMatch) return;
+
+      const varName = varMatch[1].substring(1);
+      const rawVal = varMatch[2].trim();
+
+      if (rawVal.startsWith('(') && rawVal.endsWith(')')) {
+        const choices = rawVal.substring(1, rawVal.length - 1).split(',').map(s => s.trim());
+        const selected = choices[Math.floor(Math.random() * choices.length)];
+        context[varName] = selected;
+      } else {
+        context[varName] = manager.resolveValue(rawVal, context);
+      }
+    },
+
+    // 4. SAY handler
+    say: (rest, context, subs, manager) => {
+      const sayMatch = rest.match(/^['"](\w+)['"]\s*,\s*(.+)$/i);
+      if (!sayMatch) return;
+
+      const msgType = sayMatch[1];
+      let msgTemplate = sayMatch[2].trim();
+      if (msgTemplate.startsWith('"') && msgTemplate.endsWith('"') ||
+        msgTemplate.startsWith("'") && msgTemplate.endsWith("'")) {
+        msgTemplate = msgTemplate.substring(1, msgTemplate.length - 1);
+      }
+
+      let msg = msgTemplate;
+      msg = msg.replace(/\[\$(\w+)\]/g, (match, name) => context[name] !== undefined ? context[name] : '');
+      msg = msg.replace(/\$(\w+)/g, (match, name) => context[name] !== undefined ? context[name] : '');
+      msg = msg.replace(/\s+/g, ' ').trim();
+
+      manager.tickManager.messageManager.add({
+        type: msgType,
+        text: msg,
+        actor: context.actor,
+        loc: context.loc
+      });
+    },
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
     case: (rest) => { console.log(`case`) },
@@ -45,10 +164,8 @@ export class CommandManager extends Queue {
     find: (rest) => { console.log(`find`) },
     fixplural: (rest) => { console.log(`fixplural`) },
     foreach: (rest) => { console.log(`foreach`) },
-    get: (rest) => { console.log(`get`) },
     getname: (rest) => { console.log(`getname`) },
     goto: (rest) => { console.log(`goto`) },
-    if: (rest) => { console.log(`if`) },
     include: (rest) => { console.log(`include`) },
     load: (rest) => { console.log(`load`) },
     loop: (rest) => { console.log(`loop`) },
@@ -62,65 +179,161 @@ export class CommandManager extends Queue {
     refresh: (rest) => { console.log(`refresh`) },
     runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },
-    say: (rest) => { console.log(`say`) },
     set: (rest) => { console.log(`set`) },
     swap: (rest) => { console.log(`swap`) },
     take: (rest) => { console.log(`take`) },
     unhost: (rest) => { console.log(`unhost`) },
-    var: (rest) => { console.log(`unhost`) },
-  };
-
-
-  /**
-   *  parse user input 'create a small fulffy mouse' or 'look'
-   * @param {string} command 
-   * @returns 
-   */
-  parse(command) {
-    if (!command) return;
-    // get all objects called name
-    // if one found then extract its code, split into blocks and execute them 
-    // Is one in the player (found.loc == player.id) then execute that
-    // is one in the same location as the player (found.loc == player.loc) then execute that
-    // if one is a 'command' (found.class == 'command') then execute that
-    // else nothing to do
   };
 
   /**
-   * Split the string of cowscript into blocks to be processes
-   * @param {string} cowscript 
+   * Splits off the first word, leaving the rest
+   * @param {string} whole 
+   * @returns {firstword, rest, whole}
    */
-  run(cowscript) {
-    // split the cowscript into blocks
-    const blocks = cowscript.split('##');
-    for (const block of blocks) {
-      this.process(block);
-    }
+  splitFirstWord(whole) {
+    const trimmed = whole.trim();
+    const spaceIndex = trimmed.indexOf(' ');
+    let firstword = spaceIndex === -1 ? trimmed : trimmed.substring(0, spaceIndex);
+    let rest = spaceIndex === -1 ? '' : trimmed.substring(spaceIndex + 1).trim();
+    return { firstword, rest };
   }
-
   /**
-   * split the block into cowmands
-   * @param {string} block 
+   * parse user input (specifically focusing on 'say')
+   * @param {object} commandObj { cmd: "say hello everyone", actor: "wolis", loc: "A", niceness: 0 }
    */
-  process(block) {
-    const cowmands = block.split(';');
-    for(const cowmand of cowmands) {
-      execute(cowmand);
-    }
-  }
+  parse(commandObj) {
+    const rawCmd = commandObj.cmd;
+    if (!rawCmd) return;
 
-  /**
-   * Execute a single line of a cowscript cowmand 'new $target' or 'say $rest'
-   * @param {string} cowmand 
-   */
-  execute(cowmand) {
-    const [name, ...rest] = cowmand.trim().split(/\s+/);
-    const handler = this.cowmands[name];
+    const { firstword, rest } = this.splitFirstWord(rawCmd);
 
-    if (!handler) {
-      this.tickManager.messageManager.add(`Did ${rest}`);
+    // Check if the command is 'say'
+    if (firstword.toLowerCase() === 'say') {
+      try {
+        // Load say_code.txt
+        console.log(`Processing say command: ${rest}`, process.cwd());
+        const datapath = path.join(process.cwd(), '_data');
+        const codePath = path.join(datapath, 'say_code.txt');
+        const code = fs.readFileSync(codePath, 'utf8');
+
+        // Partition cowscript code into sub-blocks
+        const subs = this.partitionCode(code);
+
+        // Build execution context
+        const context = {
+          actor: commandObj.actor || 'wolis',
+          loc: commandObj.loc || 'A',
+          niceness: commandObj.niceness || 0,
+          cmd_text: rest,
+          prefix: '',
+          text: '',
+          rel: '',
+          target: ''
+        };
+
+        // Execute from __start
+        this.runSub('__start', context, subs);
+      } catch (err) {
+        console.error('Error executing say command:', err);
+      }
     } else {
-      handler(rest.join(" "));
+      // Fallback/other command handling
+      this.tickManager.messageManager.add({
+        type: 'unhandled',
+        text: `Command '${firstword}' is not implemented yet.`
+      });
     }
+  }
+
+  /**
+   * Partitions the cowscript code by ## into subroutines
+   */
+  partitionCode(code) {
+    const subs = {};
+    // Clean carriage returns
+    const cleanCode = code.replace(/\r/g, '').replace(/\n/g, ' ');
+
+    // Split on ##
+    // We prefix with ##__start: to catch the initial statements
+    const blocks = ('##__start:' + cleanCode).split('##');
+    for (const block of blocks) {
+      if (!block.trim()) continue;
+      const colonIndex = block.indexOf(':');
+      if (colonIndex !== -1) {
+        const subName = block.substring(0, colonIndex).trim();
+        const subContent = block.substring(colonIndex + 1).trim();
+        subs[subName] = subContent;
+      }
+    }
+    return subs;
+  }
+
+  /**
+   * Executes a subroutine block line-by-line (semicolon separated)
+   */
+  runSub(subName, context, subs) {
+    const subContent = subs[subName];
+    if (!subContent) {
+      return;
+    }
+
+    const statements = subContent.split(';');
+    for (const statement of statements) {
+      const trimmedStatement = statement.trim();
+      if (!trimmedStatement) continue;
+      this.executeStatement(trimmedStatement, context, subs);
+    }
+  }
+
+  /**
+   * Executes a single statement
+   */
+  executeStatement(statement, context, subs) {
+    const trimmed = statement.trim();
+    if (!trimmed) return;
+
+    const { firstword, rest } = this.splitFirstWord(trimmed);
+
+    // Flexible handling for variable assignments without the "var" keyword
+    // e.g. `$prefix to (sweetly, nicely)` -> rewritten as `var $prefix to ...`
+    if (firstword.startsWith('$')) {
+      rest = `${firstword} ${rest}`;
+      firstword = 'var';
+    }
+
+    const handler = this.statementList[firstword.toLowerCase()];
+    if (handler) {
+      // Pass the remaining string, context, list of subs, and a reference to the manager instance
+      handler(rest, context, subs, this);
+    } else {
+      console.warn(`No handler found for statement keyword: "${firstword}"`);
+    }
+  }
+
+  /**
+   * Helper to resolve variable names or literal values
+   */
+  resolveValue(token, context) {
+    if (token.startsWith('$')) {
+      const varName = token.substring(1);
+      return context[varName] !== undefined ? context[varName] : '';
+    }
+    if ((token.startsWith('"') && token.endsWith('"')) ||
+      (token.startsWith("'") && token.endsWith("'"))) {
+      return token.substring(1, token.length - 1);
+    }
+    return token;
+  }
+
+  /**
+   * Helper to mock target resolution
+   */
+  resolveTarget(targetName, loc) {
+    if (!targetName) return 0;
+    const lowerName = targetName.toLowerCase();
+    if (lowerName === 'everyone' || lowerName === 'all' || lowerName === 'bob' || lowerName === 'wolis') {
+      return 42;
+    }
+    return 0;
   }
 }

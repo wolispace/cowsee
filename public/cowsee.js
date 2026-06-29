@@ -3,13 +3,13 @@ const ev = new EventSource("/events");
 
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
-  appendInfo("Message: " + e.data);
+  appendInfo( e.data);
 };
 
 // If you send named events (event: update)
-ev.addEventListener("update", (e) => {
-  appendInfo("Update: " + e.data);
-});
+// ev.addEventListener("update", (e) => {
+//   appendInfo("Update: " + e.data);
+// });
 
 // Helper to append text to the .info section
 function appendInfo(text) {

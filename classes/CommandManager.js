@@ -4,6 +4,7 @@ import { Queue } from './Queue.js';
 
 export class CommandManager extends Queue {
 
+  subs = {};
   constructor(tickManager) {
     super();
     this.tickManager = tickManager;
@@ -34,7 +35,7 @@ export class CommandManager extends Queue {
 
   statementList = {
     // 1. GET handler
-    get: (rest, context, subs, manager) => {
+    get: (rest, context) => {
       let getLocVar = 'loc';
       let variablesPart = rest;
       const inMatch = rest.match(/(.+)\s+in\s+\$(\w+)/i);
@@ -54,7 +55,7 @@ export class CommandManager extends Queue {
           context[variables[0]] = match[1].trim(); // text
           context[variables[1]] = match[2].trim(); // rel
           const rawTarget = match[3].trim();
-          context[variables[2]] = manager.resolveTarget(rawTarget, getLocValue);
+          context[variables[2]] = this.resolveTarget(rawTarget, getLocValue);
         } else {
           context[variables[0]] = context.cmd_text;
           context[variables[1]] = '';
@@ -66,7 +67,7 @@ export class CommandManager extends Queue {
     },
 
     // 2. IF/THEN/ELSE handler
-    if: (rest, context, subs, manager) => {
+    if: (rest, context) => {
       const ifMatch = rest.match(/^(.+?)\s+(equals|is|like|in|eq|ne|>|<|!=|>=|<=|=|==)\s+(.+?)\s+then\s+(.+)$/i);
       if (!ifMatch) return;
 
@@ -75,8 +76,8 @@ export class CommandManager extends Queue {
       const op2Raw = ifMatch[3].trim();
       const actionsPart = ifMatch[4].trim();
 
-      const val1 = manager.resolveValue(op1Raw, context);
-      const val2 = manager.resolveValue(op2Raw, context);
+      const val1 = this.resolveValue(op1Raw, context);
+      const val2 = this.resolveValue(op2Raw, context);
 
       let conditionMet = false;
       if (['>', '<', '>=', '<='].includes(operator)) {
@@ -105,14 +106,14 @@ export class CommandManager extends Queue {
       }
 
       if (conditionMet) {
-        if (thenSub) manager.runSub(thenSub, context, subs);
+        if (thenSub) this.runSub(thenSub, context);
       } else {
-        if (elseSub) manager.runSub(elseSub, context, subs);
+        if (elseSub) this.runSub(elseSub, context);
       }
     },
 
     // 3. VAR handler
-    var: (rest, context, subs, manager) => {
+    var: (rest, context) => {
       const cleanRest = rest.replace(/^var\s+/i, '');
       const varMatch = cleanRest.match(/^(\$\w+)\s+(?:to|=)\s+(.+)$/i);
       if (!varMatch) return;
@@ -125,12 +126,12 @@ export class CommandManager extends Queue {
         const selected = choices[Math.floor(Math.random() * choices.length)];
         context[varName] = selected;
       } else {
-        context[varName] = manager.resolveValue(rawVal, context);
+        context[varName] = this.resolveValue(rawVal, context);
       }
     },
 
     // 4. SAY handler
-    say: (rest, context, subs, manager) => {
+    say: (rest, context) => {
       const sayMatch = rest.match(/^['"](\w+)['"]\s*,\s*(.+)$/i);
       if (!sayMatch) return;
 
@@ -146,7 +147,7 @@ export class CommandManager extends Queue {
       msg = msg.replace(/\$(\w+)/g, (match, name) => context[name] !== undefined ? context[name] : '');
       msg = msg.replace(/\s+/g, ' ').trim();
 
-      manager.tickManager.messageManager.add({
+      this.tickManager.messageManager.add({
         type: msgType,
         text: msg,
         actor: context.actor,
@@ -217,7 +218,7 @@ export class CommandManager extends Queue {
         const code = fs.readFileSync(codePath, 'utf8');
 
         // Partition cowscript code into sub-blocks
-        const subs = this.partitionCode(code);
+        this.partitionCode(code);
 
         // Build execution context
         const context = {
@@ -232,7 +233,7 @@ export class CommandManager extends Queue {
         };
 
         // Execute from __start
-        this.runSub('__start', context, subs);
+        this.runSub('__start', context);
       } catch (err) {
         console.error('Error executing say command:', err);
       }
@@ -249,7 +250,6 @@ export class CommandManager extends Queue {
    * Partitions the cowscript code by ## into subroutines
    */
   partitionCode(code) {
-    const subs = {};
     // Clean carriage returns
     const cleanCode = code.replace(/\r/g, '').replace(/\n/g, ' ');
 
@@ -262,17 +262,17 @@ export class CommandManager extends Queue {
       if (colonIndex !== -1) {
         const subName = block.substring(0, colonIndex).trim();
         const subContent = block.substring(colonIndex + 1).trim();
-        subs[subName] = subContent;
+        this.subs[subName] = subContent;
       }
     }
-    return subs;
+    // return subs;
   }
 
   /**
    * Executes a subroutine block line-by-line (semicolon separated)
    */
-  runSub(subName, context, subs) {
-    const subContent = subs[subName];
+  runSub(subName, context) {
+    const subContent = this.subs[subName];
     if (!subContent) {
       return;
     }
@@ -281,14 +281,14 @@ export class CommandManager extends Queue {
     for (const statement of statements) {
       const trimmedStatement = statement.trim();
       if (!trimmedStatement) continue;
-      this.executeStatement(trimmedStatement, context, subs);
+      this.executeStatement(trimmedStatement, context);
     }
   }
 
   /**
    * Executes a single statement
    */
-  executeStatement(statement, context, subs) {
+  executeStatement(statement, context) {
     const trimmed = statement.trim();
     if (!trimmed) return;
 
@@ -303,8 +303,8 @@ export class CommandManager extends Queue {
 
     const handler = this.statementList[firstword.toLowerCase()];
     if (handler) {
-      // Pass the remaining string, context, list of subs, and a reference to the manager instance
-      handler(rest, context, subs, this);
+      // Pass the remaining string, context
+      handler(rest, context);
     } else {
       console.warn(`No handler found for statement keyword: "${firstword}"`);
     }

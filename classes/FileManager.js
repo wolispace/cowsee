@@ -15,9 +15,11 @@ const MIME = {
 
 export class FileManager {
   public = 'public';
+  datapath = '_data/';
 
-  constructor(dirname) {
-    this.root = path.join(dirname, this.public);
+  constructor(tickManager) {
+    this.tickManager = tickManager;
+    this.root = this.public;
   }
 
   /**
@@ -43,4 +45,14 @@ export class FileManager {
   #replaceParams(content, params) {
     return content.replace(/\{\{(\w+)\}\}/g, (_, key) => params[key] ?? '');
   }
+
+  /**
+   * Returns the json object from the data folder
+   * @param {string} filename 
+   * @returns {object}
+   */
+  loadJson(filename) {
+    return JSON.parse(fs.readFileSync(`${this.datapath}${filename}.json`, `utf8`));
+  }
+
 }

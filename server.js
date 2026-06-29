@@ -17,7 +17,6 @@ const app = {
   datapath: '_data',
 };
 
-const fileManager = new FileManager(app.dirname);
 const tickManager = new TickManager();
 
 const server = http.createServer((request, result) => {
@@ -27,7 +26,7 @@ const server = http.createServer((request, result) => {
   if (request.url === '/command' && request.method === 'POST') {
     return tickManager.commandManager.handle(request, result);
   }
-  fileManager.handle(request, result, app);
+  tickManager.fileManager.handle(request, result, app);
 });
 
 server.listen(app.port, () => {

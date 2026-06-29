@@ -25,6 +25,4 @@ export class Utilities {
     return Math.floor(Math.random() * max);
   }
 
-
-
 }

@@ -5,9 +5,9 @@ export class ObjectManager {
   filename = 'objects_0_BB.json';
   objects = {};
 
-  constructor() {
-    this.app = {datapath:'_data'};
-  };
+  constructor(tickManager) {
+    this.tickManager = tickManager;
+  }
 
   /**
    * Returns the whole object from a chunked file
@@ -15,7 +15,7 @@ export class ObjectManager {
    * @returns {object}
    */
   fundById(id) {
-    this.objects = JSON.parse(fs.readFileSync(`${this.app.datapath}/${this.filename}`, `utf8`));
+    this.objects = this.tickManager.fileManager.loadJson(this.filename);
     return this.objects[id] ?? [];
   };
 
@@ -25,7 +25,7 @@ export class ObjectManager {
    * @returns {array} of IDs with this name
    */
   findByName(name) {
-    this.names = JSON.parse(fs.readFileSync(`${this.app.datapath}/index_name.json`, `utf8`));
+    this.names = this.tickManager.fileManager.loadJson('index_name');
     return this.names[name];
   };
 
@@ -35,7 +35,7 @@ export class ObjectManager {
    * @returns {string}
    */
   getCode(obj) {
-    this.codes = JSON.parse(fs.readFileSync(`${this.app.datapath}/index_code.json`, `utf8`));
+    this.codes = this.tickManager.fileManager.loadJson('index_code');
     return this.codes[obj.id];
   };
   

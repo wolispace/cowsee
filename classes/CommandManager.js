@@ -207,43 +207,24 @@ export class CommandManager extends Queue {
     if (!rawCmd) return;
 
     const { firstword, rest } = this.splitFirstWord(rawCmd);
+    // Build execution context
+    const context = {
+      actor: commandObj.actor || 'wolis',
+      loc: commandObj.loc || 'A',
+      niceness: commandObj.niceness || 0,
+      cmd_text: rest,
+      prefix: '',
+      text: '',
+      rel: '',
+      target: ''
+    };
 
-    // Check if the command is 'say'
-    if (firstword.toLowerCase() === 'say') {
-      try {
-        // Load say_code.txt
-        console.log(`Processing say command: ${rest}`, process.cwd());
-        const datapath = path.join(process.cwd(), '_data');
-        const codePath = path.join(datapath, 'say_code.txt');
-        const code = fs.readFileSync(codePath, 'utf8');
-
-        // Partition cowscript code into sub-blocks
-        this.partitionCode(code);
-
-        // Build execution context
-        const context = {
-          actor: commandObj.actor || 'wolis',
-          loc: commandObj.loc || 'A',
-          niceness: commandObj.niceness || 0,
-          cmd_text: rest,
-          prefix: '',
-          text: '',
-          rel: '',
-          target: ''
-        };
-
-        // Execute from __start
-        this.runSub('__start', context);
-      } catch (err) {
-        console.error('Error executing say command:', err);
-      }
-    } else {
-      // Fallback/other command handling
-      this.tickManager.messageManager.add({
-        type: 'unhandled',
-        text: `Command '${firstword}' is not implemented yet.`
-      });
-    }
+    const code = this.tickManager.objectManager.findCommand(firstword, context);
+    if (!code) return;
+    // Partition cowscript code into sub-blocks
+    this.partitionCode(code);
+    // Execute from __start
+    this.runSub('__start', context);
   }
 
   /**

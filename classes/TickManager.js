@@ -1,11 +1,14 @@
 import { MessageManager } from './MessageManager.js';
 import { CommandManager } from './CommandManager.js';
+import { ObjectManager } from './ObjectManager.js';
+
 
 export class TickManager {
   interval = 5_000;
   constructor() {
     this.commandManager = new CommandManager(this);
     this.messageManager = new MessageManager(this);
+    this.objectManager = new ObjectManager();
      
     setInterval(() => this.doNext(), this.interval);
   }

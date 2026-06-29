@@ -14,6 +14,7 @@ const app = {
   port: process.env.PORT || 8899,
   version: '0.0.2',
   dirname: path.dirname(fileURLToPath(import.meta.url)),
+  datapath: '_data',
 };
 
 const fileManager = new FileManager(app.dirname);
@@ -30,7 +31,7 @@ const server = http.createServer((request, result) => {
 });
 
 server.listen(app.port, () => {
-  console.log(`cowsee server running on http://localhost:${app['port']}`);
+  console.log(`${app['name']} server running on port ${app['port']}`);
 });
 
 

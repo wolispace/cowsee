@@ -1,18 +1,15 @@
 import fs from 'fs';
 import path from 'path';
-import { PoolObject } from './PoolObject.js';
 import { IdManager } from './IdManager.js';
 
 
 export class ObjectManager {
-  filename = 'objects_0_BB.json';
-  objects = {};
   pool = new Map(); // pool of currently being interacted with objects
-  // buckets (array of arrays of IDs) oldest array gets ID deleted
-  buckets = Array.from({ length: 60 }, () => new Set());
+  buckets = Array.from({ length: 60 }, () => new Set()); // buckets (array of arrays of IDs) oldest array gets ID deleted
+  chunk = 10000; // how many objects in a chunk of objects so we dont load and save everything all at once
+  dirty = new Set(); // all modified objects written out in batches
   currentBucket = 0;
   idManager = new IdManager();
-  chunk = 1000; // how many obejcts in a chunk of objects so we dont load and save everything all at once
 
   constructor(tickManager) {
     this.tickManager = tickManager;
@@ -68,7 +65,7 @@ export class ObjectManager {
   };
 
   /**
-   * First the first named command (look in player then location then globaly so long as its a command)
+   * Find the first named command (look in player then location then globaly so long as its a command)
    * @param {string} firstword 
    * @param {object} context 
    * @returns {string} return the code from the bext match object
@@ -93,50 +90,57 @@ export class ObjectManager {
     }
   };
 
-  // chunkFilenameForId(id) {
-  //   const intId = this.idManagerd.ecodeInt(id);
-  // }
-
-  flushDirty() {
+/**
+ * Write out all obj in this.dirtyObjects
+ */
+  saveDirty() {
     const chunks = new Map(); // chunkFilename → { id → obj }
 
-    for (const id of this.dirtyObjects) {
-      const poolObject = this.pool.get(id);
-      if (!poolObject) continue;
-
-      const filename = chunkFilenameForId(id);
+    for (const id of this.dirty) {
+      const obj = this.pool.get(id);
+      const filename = this.chunkFilenameForId(id);
 
       if (!chunks.has(filename)) {
-        chunks.set(filename, loadChunk(filename)); // load existing chunk
+        chunks.set(filename, this.tickManager.fileManager.loadJson(filename)); // load existing chunk
       }
-
-      chunks.get(filename)[id] = poolObject.obj;
-      poolObject.dirty = false;
+      chunks.get(filename)[id] = obj;
     }
-
     // Write updated chunks
     for (const [filename, chunkData] of chunks.entries()) {
-      saveChunk(filename, chunkData);
+      this.tickManager.fileManager.saveJson(filename, chunkData);
     }
 
-    dirtySet.clear();
+    this.dirty.clear();
   }
 
 
   save(obj) {
-    // we would not be saving if we didnt already have the object in the pool
-    const poolObject = this.pool.get(obj.id);
-    if (!poolObject) return;
-
-    this.buckets[this.currentBucket].add(id);
-    // TODO: is this overwriting the contents of the object in the pool with the new edits?
-    Object.assign(poolObject.obj, obj);
+    // make sure we have an id
+    if (!obj.id) {
+      obj.id = this.idManager.new();
+    } 
+    const foundObj = this.pool.get(obj.id);
+    if (foundObj) {
+      // TODO: is this overwriting the contents of the object in the pool with the new edits?
+      Object.assign(foundObj, obj);
+    }
+    // add into our bucket so we can clear it when its old
+    this.buckets[this.currentBucket].add(obj.id);
 
     // build additional info like longname and plural
-    // get a new ID if needed
-    // get the obj file it needs to be written to
-    // add it
+    // add to dirty so it can get written out to disk in a batch
+    this.dirty.add(obj.id);
+    // add it to our pool of current objects
+    this.pool.set(obj.id, obj);
     // index all the things like code, location, name, class, host
+    // DEBUG: save all dirty();
+    this.saveDirty();
+  }
+
+  chunkFilenameForId(id) {
+    const idNumber = this.idManager.decodeInt(id);
+    const start = Math.floor(idNumber / this.chunk) * this.chunk;
+    return `objects_${start}_${start + this.chunk - 1}`;
   }
 
 /**
@@ -145,9 +149,7 @@ export class ObjectManager {
  * @returns {object}
  */
   loadChunkForId(id) {
-    const idNumber = this.idManager.decodeInt(id);
-    const start = Math.floor(n / this.chunk) * this.chunk;
-    const filename = `objects_${start}_${start + this.chunk - 1}`;
+    const filename = this.chunkFilenameForId(id);
     return this.tickManager.fileManager.loadJson(filename);
   }
 

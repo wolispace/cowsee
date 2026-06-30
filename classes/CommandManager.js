@@ -16,6 +16,8 @@ export class CommandManager extends Queue {
     request.on('end', () => {
       const command = JSON.parse(body);
       this.add(command);
+      // TODO: example of a save 
+      // this.tickManager.objectManager.save({id:"G", loc:"z", class:"mouse"});
       result.writeHead(200, { 'Content-Type': 'application/json' });
       result.end(JSON.stringify({ ok: true }));
       this.tickManager.doNext();

@@ -55,4 +55,13 @@ export class FileManager {
     return JSON.parse(fs.readFileSync(`${this.datapath}${filename}.json`, `utf8`));
   }
 
+  /**
+   * Write a json file to disk in the data folder
+   * @param {string} filename 
+   * @param {object} json 
+   */
+  saveJson(filename, json) {
+    fs.writeFileSync(`${this.datapath}${filename}.json`, JSON.stringify(json, null, 2), `utf8`);
+  }
+
 }

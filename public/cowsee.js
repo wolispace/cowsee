@@ -15,7 +15,12 @@ ev.onmessage = (e) => {
 function appendInfo(text) {
   const info = document.querySelector(".info");
   const div = document.createElement("div");
-  div.textContent = text;
+  const json = JSON.parse(text);
+  console.log(json.context);
+      json.msg = json.msg.replace(/\[\$(\w+)\]/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
+      json.msg = json.msg.replace(/\$(\w+)/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
+      json.msg =json. msg.replace(/\s+/g, ' ').trim();
+  div.textContent = json.msg;
   info.appendChild(div);
 }
 
@@ -31,3 +36,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+``

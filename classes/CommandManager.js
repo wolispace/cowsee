@@ -31,7 +31,7 @@ export class CommandManager extends Queue {
   doNext() {
     if (this.pending()) {
       const command = this.get();
-      command.actor = 'z'; // DEBUG - player is wolis
+      command.actor = 'wolis'; // DEBUG - player is wolis. this is not right, [$actor] needs to be converted ingo an ID which then is converted into a name and a link in the browser
       this.parse(command);
     }
   }
@@ -70,7 +70,15 @@ export class CommandManager extends Queue {
     };
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
-    if (!code) return;
+    if (!code) {
+        this.tickManager.messageManager.add({
+        msg: `[$actor] tried to ${rawCmd}, but nothing happened`,
+        actor: this.context.actor,
+        loc: this.context.loc,
+        context: this.context
+      });
+      return;
+    };
     // Partition cowscript code into sub-blocks
     this.partitionCode(code);
     // Execute from __start
@@ -96,7 +104,6 @@ export class CommandManager extends Queue {
         this.subs[subName] = subContent;
       }
     }
-    // return subs;
   }
 
   /**
@@ -107,7 +114,6 @@ export class CommandManager extends Queue {
     if (!subContent) {
       return;
     }
-
     const statements = subContent.split(';');
     for (const statement of statements) {
       const trimmedStatement = statement.trim();
@@ -286,9 +292,10 @@ export class CommandManager extends Queue {
 
       this.tickManager.messageManager.add({
         type: msgType,
-        text: msg,
+        msg: msg,
         actor: this.context.actor,
-        loc: this.context.loc
+        loc: this.context.loc,
+        context: this.context
       });
     },
     add: (rest) => { console.log(`add`) },

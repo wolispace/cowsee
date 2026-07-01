@@ -33,8 +33,8 @@ export class TickManager {
 
     // Process one message if available
     if (this.messageManager.pending()) {
-      const message = this.messageManager.get();
-      this.messageManager.send({ message });
+      const payload = this.messageManager.get();
+      this.messageManager.send(payload);
       setImmediate(() => this.#process());
       return;
     }

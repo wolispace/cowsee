@@ -22,7 +22,7 @@ export class ObjectManager {
    */
   findById(id) {
     if (this.pool.has(id)) {
-      return pool.get(id);
+      return this.pool.get(id);
     }
     // Not in pool → load from chunk
     const chunk = loadChunkForId(id);

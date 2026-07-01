@@ -148,18 +148,51 @@ export class CommandManager extends Queue {
   }
 
   /**
-   * Helper to resolve variable names or literal values
+   * Resolve a value: literal, $var, or $actor's loc's host's loc chain
    */
   resolveValue(token) {
-    if (token.startsWith('$')) {
-      const varName = token.substring(1);
-      return this.context[varName] !== undefined ? this.context[varName] : '';
+    const t = token.trim();
+    if ((t.startsWith('"') && t.endsWith('"')) ||
+        (t.startsWith("'") && t.endsWith("'"))) {
+      return t.substring(1, t.length - 1);
     }
-    if ((token.startsWith('"') && token.endsWith('"')) ||
-      (token.startsWith("'") && token.endsWith("'"))) {
-      return token.substring(1, token.length - 1);
+    if (!t.startsWith('$')) return t;
+
+    const parts = t.split("'s ");
+    const varName = parts[0].substring(1);
+    let value = this.context[varName] ?? '';
+
+    for (let i = 1; i < parts.length; i++) {
+      const obj = this.tickManager.objectManager.findById(value);
+      if (!obj) return '';
+      value = obj[parts[i]] ?? '';
     }
-    return token;
+    return value;
+  }
+
+  /**
+   * Parse a natural language object description into its components
+   * e.g. "3 small black fluffy mice" → { qty, colour, attribs, class, name }
+   */
+  parseObj(str) {
+    const colours = ['red','orange','yellow','green','blue','purple','pink','black','white','grey','gray','brown','silver','gold'];
+    const sizes   = ['tiny','small','little','large','big','huge','giant','massive'];
+    const words   = str.trim().replace(/^["']|["']$/g, '').split(/\s+/);
+    let qty = 1;
+    let colour = '', attribs = [], cls = '', name = '';
+    let i = 0;
+    if (/^\d+$/.test(words[0])) { qty = parseInt(words[i++]); }
+    const articles = ['a','an','the','some'];
+    if (articles.includes(words[i]?.toLowerCase())) i++;
+    while (i < words.length) {
+      const w = words[i].toLowerCase();
+      if (!colour && colours.includes(w))      { colour = w; i++; }
+      else if (sizes.includes(w))              { attribs.push(w); i++; }
+      else                                     { break; }
+    }
+    cls  = words[i]   || '';
+    name = words.slice(i + 1).join(' ');
+    return { qty, colour, attribs: attribs.join(' '), class: cls, name };
   }
 
   /**
@@ -318,10 +351,41 @@ export class CommandManager extends Queue {
     motion: (rest) => { console.log(`motion`) },
     msg: (rest) => { console.log(`msg`) },
     multiply: (rest) => { console.log(`multiply`) },
-    new: (rest) => { console.log(`new`) },
+    new: (rest) => {
+      const parsed = this.parseObj(this.resolveValue(rest.trim()));
+      const om = this.tickManager.objectManager;
+      const loc = this.context.loc;
+      // find existing object with same class+name in this loc to stack onto
+      let existing = null;
+      for (const [id, obj] of om.pool) {
+        if (obj.loc === loc && obj.class === parsed.class && obj.name === parsed.name) {
+          existing = obj; break;
+        }
+      }
+      if (existing) {
+        existing.qty = (existing.qty || 1) + parsed.qty;
+        om.save(existing);
+        this.context.target = existing.id;
+      } else {
+        const obj = { loc, ...parsed };
+        om.save(obj);
+        this.context.target = obj.id;
+      }
+      this.context.new_id = this.context.target;
+    },
     nudge: (rest) => { console.log(`nudge`) },
     percentbar: (rest) => { console.log(`percentbar`) },
     refresh: (rest) => { console.log(`refresh`) },
+    relook: (rest) => {
+      const loc = this.resolveValue(rest.trim());
+      this.tickManager.messageManager.add({
+        type: 'force',
+        msg: `force:look ${loc}`,
+        actor: this.context.actor,
+        loc: loc,
+        context: this.context
+      });
+    },
     runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },
     set: (rest) => { console.log(`set`) },

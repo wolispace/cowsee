@@ -16,10 +16,13 @@ function appendInfo(text) {
   const info = document.querySelector(".info");
   const div = document.createElement("div");
   const json = JSON.parse(text);
-  console.log(json.context);
+  console.log(json);
+  // TODO need to find and replace marams with values ef [$actor] becomes [87] which becomes [wolis]
+  if (json.msg) {
       json.msg = json.msg.replace(/\[\$(\w+)\]/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
       json.msg = json.msg.replace(/\$(\w+)/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
       json.msg =json. msg.replace(/\s+/g, ' ').trim();
+  }
   div.textContent = json.msg;
   info.appendChild(div);
 }

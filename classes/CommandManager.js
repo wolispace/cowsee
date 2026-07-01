@@ -72,9 +72,7 @@ export class CommandManager extends Queue {
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {
         this.tickManager.messageManager.add({
-        msg: `[$actor] tried to ${rawCmd}, but nothing happened`,
-        actor: this.context.actor,
-        loc: this.context.loc,
+        msg: `[$actor] trys to ${rawCmd}, but nothing happens`,
         context: this.context
       });
       return;
@@ -324,10 +322,7 @@ export class CommandManager extends Queue {
       msg = msg.replace(/\s+/g, ' ').trim();
 
       this.tickManager.messageManager.add({
-        type: msgType,
         msg: msg,
-        actor: this.context.actor,
-        loc: this.context.loc,
         context: this.context
       });
     },
@@ -378,8 +373,9 @@ export class CommandManager extends Queue {
     refresh: (rest) => { console.log(`refresh`) },
     relook: (rest) => {
       const loc = this.resolveValue(rest.trim());
+      // TODO: this "force" should queue up a new command from the 'actor' to 'look'
       this.tickManager.messageManager.add({
-        type: 'force',
+
         msg: `force:look ${loc}`,
         actor: this.context.actor,
         loc: loc,

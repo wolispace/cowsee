@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { Queue } from './Queue.js';
+import { Utilities } from './Utilities.js';
+
 
 export class CommandManager extends Queue {
 
@@ -9,6 +11,7 @@ export class CommandManager extends Queue {
   constructor(tickManager) {
     super();
     this.tickManager = tickManager;
+    this.utils = new Utilities();
   }
 
   handle(request, result) {
@@ -308,21 +311,11 @@ export class CommandManager extends Queue {
     say: (rest) => {
       const match = rest.match(/^['"](\w+)['"]\s*,\s*(.+)$/i);
       if (!match) return;
-
-      const msgType = match[1];
-      let msgTemplate = match[2].trim();
-      if (msgTemplate.startsWith('"') && msgTemplate.endsWith('"') ||
-        msgTemplate.startsWith("'") && msgTemplate.endsWith("'")) {
-        msgTemplate = msgTemplate.substring(1, msgTemplate.length - 1);
-      }
-
-      let msg = msgTemplate;
-      msg = msg.replace(/\[\$(\w+)\]/g, (match, name) => this.context[name] !== undefined ? this.context[name] : '');
-      msg = msg.replace(/\$(\w+)/g, (match, name) => this.context[name] !== undefined ? this.context[name] : '');
-      msg = msg.replace(/\s+/g, ' ').trim();
+      // include the trigger word 'say' or 'ask' into the context so we can find which objects react to it
+      this.context.trigger = (match[1]);
 
       this.tickManager.messageManager.add({
-        msg: msg,
+        msg:  this.utils.trimQuotes(match[2].trim()),
         context: this.context
       });
     },
@@ -391,4 +384,14 @@ export class CommandManager extends Queue {
   };
 
 
+  /**
+   * Find the objects in the data.context.loc that react to this trigger word
+   * loop through each and see if they are triggered in this context
+   * @param {object} data 
+   */
+  reactions(data) {
+    // find all objects that react to this trigger word in this location
+console.log(`What is triggered by ${data.context.trigger} in ${data.context.loc}?`);
+    // eg 'ask', there is a robot in your location that "has statement "if taget of 'say' then answer;
+  }
 }

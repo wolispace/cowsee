@@ -13,6 +13,7 @@ export class MessageManager extends Queue {
 
   add(data) {
     super.add(data);
+    this.tickManager.commandManager.reactions(data);
     this.tickManager.doNext();
   }
 

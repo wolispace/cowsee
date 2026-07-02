@@ -25,4 +25,14 @@ export class Utilities {
     return Math.floor(Math.random() * max);
   }
 
+  /**
+   * Removes wrapping quotes from the string eg '"hello"' becomes: 'hello'
+   * - will cwork with enything like {hello} or [hello]
+   * - will clobber unquoted strings so hello becomes ell 
+   * @param {string} msg 
+   * @returns {string}
+   */
+  trimQuotes(msg) {
+    return msg.substring(1, msg.length - 1);
+  }
 }

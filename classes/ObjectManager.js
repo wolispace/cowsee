@@ -1,17 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import { IdManager } from './IdManager.js';
-import { DecayPool } from './DecayPool.js';
+import { PoolManager } from './PoolManager.js';
 
-
+/**
+ * 
+ */
 export class ObjectManager {
-  pool = new DecayPool(); // pool of objects we are currently interacting with
-  chunk = 10000; // how many objects in a chunk of objects so we dont load and save everything all at once
-  dirty = new Set(); // all modified objects written out in batches
   idManager = new IdManager();
+  pools = new Map();
 
   constructor(tickManager) {
     this.tickManager = tickManager;
+    for (const key of ['id', 'name', 'code', 'loc']) {
+      this.pools[key] = new PoolManager(tickManager, key);
+    }
   }
 
   /**
@@ -20,19 +23,7 @@ export class ObjectManager {
    * @returns {object}
    */
   findById(id) {
-    if (this.pool.has(id)) {
-      return this.pool.get(id);
-    }
-    // Not in pool → load from chunk
-    const chunk = loadChunkForId(id);
-    console.log(chunk);
-    // add all objects from chunk into the pool
-    for (const [cid, obj] of Object.entries(chunk)) {
-      this.pool.set(cid, obj);
-      // add into current bucket for later eviction
-      this.buckets[this.currentBucket].add(id);
-    }
-    return pool.get(id);
+    return this.pool.id.get(id);
   };
 
   /**
@@ -41,28 +32,16 @@ export class ObjectManager {
    * @returns {array} of IDs with this name
    */
   findByName(name) {
-    if (!this.names) {
-      this.names = this.tickManager.fileManager.loadJson('index_name');
-    }
-    // all names are in memory.. is this wise?
-    // chunk into first two letters eg: index_name_lo.json = {"look": [], "lock": [], "loaf": []}
-    // use bool and bucket concept to keep most recent in memory
-    // need to update words when saving
-    return this.names[name];
+    return this.pool.name(name);
   };
 
   /**
    * Retruns the code for the object.id passed in
-   * @param {object} obj 
+   * @param {id} id 
    * @returns {string}
    */
   getCode(obj) {
-    if (!this.code) {
-      this.codes = this.tickManager.fileManager.loadJson('index_code');
-    }
-    // all code is stored in memory
-    // need to update it when a coded object is saved
-    return this.codes[obj.id];
+    return this.pool.code(id);
   };
 
   /**
@@ -91,78 +70,39 @@ export class ObjectManager {
     }
   };
 
-/**
- * Write out all obj in this.dirtyObjects
- */
-  saveDirty() {
-    const chunks = new Map(); // chunkFilename → { id → obj }
-
-    for (const id of this.dirty) {
-      const obj = this.pool.get(id);
-      const filename = this.chunkFilenameForId(id);
-
-      if (!chunks.has(filename)) {
-        chunks.set(filename, this.tickManager.fileManager.loadJson(filename)); // load existing chunk
-      }
-      chunks.get(filename)[id] = obj;
-    }
-    // Write updated chunks
-    for (const [filename, chunkData] of chunks.entries()) {
-      this.tickManager.fileManager.saveJson(filename, chunkData);
-    }
-
-    this.dirty.clear();
-  }
-
-
-  save(obj) {
+  /**
+   * Save the object, if it's new create a new ID
+   * - whole objects live in the 'id' pool as this is their key 
+   * - the write all dirty object to disk straight away as a test
+   * @param {object} obj 
+   */
+  saveObject(obj) {
     // make sure we have an id
     if (!obj.id) {
       obj.id = this.idManager.new();
-    } 
-    const foundObj = this.pool.get(obj.id);
-    if (foundObj) {
-      // TODO: is this overwriting the contents of the object in the pool with the new edits?
-      Object.assign(foundObj, obj);
+    } else {
+      const oldObj = this.pool.id.get(obj.id);
     }
-    // add into our bucket so we can clear it when its old
-    this.buckets[this.currentBucket].add(obj.id);
+    this.pool.id.save(obj.id, obj);
 
-    // build additional info like longname and plural
-    // add to dirty so it can get written out to disk in a batch
-    this.dirty.add(obj.id);
-    // add it to our pool of current objects
-    this.pool.set(obj.id, obj);
-    // index all the things like code, location, name, class, host
+    // TODO: saving an object also saves it into the loc and name etc pools
+    // if the Object is being edited (not new) then we may need to remove old data from pools before saving
+
+
+  
+    if (oldObj) {
+      this.pool.name.delete(oldObj.class, obj.id);
+    }
+    this.pool.name.saveIn(obj.class, obj.id);
+
+    if (oldObj) {
+      this.pool.name.delete(oldObj.class, obj.id);
+    }
+    this.pool.name.saveIn('loc', obj.id);
+
+
     // DEBUG: save all dirty();
-    this.saveDirty();
-  }
-
-  chunkFilenameForId(id) {
-    const idNumber = this.idManager.decodeInt(id);
-    const start = Math.floor(idNumber / this.chunk) * this.chunk;
-    return `objects_${start}_${start + this.chunk - 1}`;
-  }
-
-/**
- * Loat the relevent chunk for the ID
- * @param {string} id 
- * @returns {object}
- */
-  loadChunkForId(id) {
-    const filename = this.chunkFilenameForId(id);
-    return this.tickManager.fileManager.loadJson(filename);
-  }
-
-  /**
-   * When this runs it drops off the oldes IDs from the pool
-   */
-  evictOldObjects() { // 5 minutes
-    this.currentBucket = (this.currentBucket + 1) % this.buckets.length;
-    for (const id of this.buckets[this.currentBucket]) {
-      this.pool.delete(id);
-    }
-    this.buckets[this.currentBucket].clear();
+    this.pool.id.saveDirty();
   }
 
 };

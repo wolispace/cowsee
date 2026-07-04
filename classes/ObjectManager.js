@@ -1,14 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { IdManager } from './IdManager.js';
+import { DecayPool } from './DecayPool.js';
 
 
 export class ObjectManager {
-  pool = new Map(); // pool of currently being interacted with objects
-  buckets = Array.from({ length: 60 }, () => new Set()); // buckets (array of arrays of IDs) oldest array gets ID deleted
+  pool = new DecayPool(); // pool of objects we are currently interacting with
   chunk = 10000; // how many objects in a chunk of objects so we dont load and save everything all at once
   dirty = new Set(); // all modified objects written out in batches
-  currentBucket = 0;
   idManager = new IdManager();
 
   constructor(tickManager) {
@@ -46,6 +45,8 @@ export class ObjectManager {
       this.names = this.tickManager.fileManager.loadJson('index_name');
     }
     // all names are in memory.. is this wise?
+    // chunk into first two letters eg: index_name_lo.json = {"look": [], "lock": [], "loaf": []}
+    // use bool and bucket concept to keep most recent in memory
     // need to update words when saving
     return this.names[name];
   };

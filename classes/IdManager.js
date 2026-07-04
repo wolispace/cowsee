@@ -10,7 +10,8 @@ export class IdManager {
   counter = 0;
   // if alphabet is 62 char long then we are doing base62 encoding
   alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
+  chunkSize = 500; // how many objects per file
+  chunkLength = 2; // how many chars in the chunk c0_cz or c00_czz 
   constructor() {
     this.load();
   }
@@ -84,6 +85,54 @@ export class IdManager {
 
     return num;
   }
+
+
+  /**
+   * Pad with lowest value so all ids/keys have the same min length 
+   * eg "F" becomes "F0" if we are chunking with 2 character so ends up in index_name_F0_Fz.json
+   * Sme logic works for base62 encoded ints, no need to decode. 
+   * @param {string} str 
+   * @returns {string}
+   */
+  normalize(str) {
+    const padChar = this.alphabet[0]; // lowest char
+    return str.padEnd(this.keyLength, padChar);
+  }
+
+
+/**
+ * Converts an integer OR base62 string into a chunked filename.
+ * chunkSize = number of prefixes per chunk (NOT number of objects)
+ * chunkLength = number of characters in the prefix (e.g. 2 → "F0_Fz")
+ */
+chunkFilename(id) {
+
+    // 1. Convert id to a base62 string if needed
+    let encoded = typeof id === "number"
+        ? encodeInt(id)
+        : id; // already encoded
+
+    // 2. Normalize to prefix length
+    const prefix = encoded.padEnd(this.chunkLength, this.alphabet[0])
+                         .slice(0, this.chunkLength);
+
+    // 3. Convert prefix → integer index
+    const prefixIndex = this.decodeInt(prefix);
+
+    // 4. Determine chunk number
+    const chunkNumber = Math.floor(prefixIndex / this.chunkSize);
+
+    // 5. Compute chunk start/end prefix indexes
+    const startIndex = chunkNumber * this.chunkSize;
+    const endIndex   = startIndex + this.chunkSize - 1;
+
+    // 6. Convert back to base62 prefixes
+    const start = encodeInt(startIndex).padStart(this.chunkLength, this.alphabet[0]);
+    const end   = encodeInt(endIndex).padStart(this.chunkLength, this.alphabet[0]);
+
+    return `${start}_${end}`;
+}
+
 
 };
 

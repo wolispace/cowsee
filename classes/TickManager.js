@@ -6,12 +6,13 @@ import { FileManager } from './FileManager.js';
 
 export class TickManager {
   interval = 5_000;
-  constructor() {
+  constructor(testing = false) {
     this.commandManager = new CommandManager(this);
     this.messageManager = new MessageManager(this);
     this.fileManager = new FileManager(this);
     this.objectManager = new ObjectManager(this);
-     
+    
+    if (testing) return;
     setInterval(() => this.doNext(), this.interval);
   }
 

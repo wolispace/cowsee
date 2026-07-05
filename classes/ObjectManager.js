@@ -23,7 +23,7 @@ export class ObjectManager {
    * @returns {object}
    */
   findById(id) {
-    return this.pool.id.get(id);
+    return this.pools.id.get(id);
   };
 
   /**
@@ -32,7 +32,7 @@ export class ObjectManager {
    * @returns {array} of IDs with this name
    */
   findByName(name) {
-    return this.pool.name(name);
+    return this.pools.name(name);
   };
 
   /**
@@ -41,7 +41,7 @@ export class ObjectManager {
    * @returns {string}
    */
   getCode(obj) {
-    return this.pool.code(id);
+    return this.pools.code(id);
   };
 
   /**
@@ -81,9 +81,9 @@ export class ObjectManager {
     if (!obj.id) {
       obj.id = this.idManager.new();
     } else {
-      const oldObj = this.pool.id.get(obj.id);
+      const oldObj = this.pools.id.get(obj.id);
     }
-    this.pool.id.save(obj.id, obj);
+    this.pools.id.save(obj.id, obj);
 
     // TODO: saving an object also saves it into the loc and name etc pools
     // if the Object is being edited (not new) then we may need to remove old data from pools before saving
@@ -91,18 +91,18 @@ export class ObjectManager {
 
   
     if (oldObj) {
-      this.pool.name.delete(oldObj.class, obj.id);
+      this.pools.name.delete(oldObj.class, obj.id);
     }
-    this.pool.name.saveIn(obj.class, obj.id);
+    this.pools.name.saveIn(obj.class, obj.id);
 
     if (oldObj) {
-      this.pool.name.delete(oldObj.class, obj.id);
+      this.pools.name.delete(oldObj.class, obj.id);
     }
-    this.pool.name.saveIn('loc', obj.id);
+    this.pools.name.saveIn('loc', obj.id);
 
 
     // DEBUG: save all dirty();
-    this.pool.id.saveDirty();
+    this.pools.id.saveDirty();
   }
 
 };

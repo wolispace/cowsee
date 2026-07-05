@@ -52,7 +52,11 @@ export class FileManager {
    * @returns {object}
    */
   loadJson(filename) {
-    return JSON.parse(fs.readFileSync(`${this.datapath}${filename}.json`, `utf8`));
+   const filepath = `${this.datapath}${filename}.json`;
+    console.log(`loading ${filepath}`);
+    if (!fs.existsSync(filepath)) return {};
+  
+    return JSON.parse(fs.readFileSync(filepath, `utf8`));
   }
 
   /**
@@ -61,7 +65,9 @@ export class FileManager {
    * @param {object} json 
    */
   saveJson(filename, json) {
-    fs.writeFileSync(`${this.datapath}${filename}.json`, JSON.stringify(json, null, 2), `utf8`);
+    const filepath = `${this.datapath}${filename}.json`;
+    console.log(`saving ${filepath}`);
+    fs.writeFileSync(filepath, JSON.stringify(json, null, 2), `utf8`);
   }
 
 }

@@ -2,13 +2,13 @@
 // a decay pool that loads from disk as needed and write out at intervals
 // this manages one pool so multiple poolManagers are needed for id, name, loc etc..
 export class PoolManager {
-  basename = 'index_'; // the base name of the files being read and written eg index_id_0_1999.json
+  basename = 'ZZ_index_'; // the base name of the files being read and written eg index_id_0_1999.json
   key = ''; // keys are called 'id' 'name' etc..
   pool = new Map(); // pool of currently being interacted with objects
   buckets = [];  // buckets (array of arrays of IDs) oldest array gets ID deleted
   currentBucket = 0; // which bucket are we filling now
-  dirtyUpdate = new Set(); // all of the modified objects
-  dirtyDelete = new Set(); // all of the deleted objects
+  dirtyUpdated = new Set(); // all of the modified objects
+  dirtyDeleted = new Set(); // all of the deleted objects
 
   /**
    * A pool manager you get and set into which loads and saves to a base62 shard file eg 'index_name_D.json' 
@@ -47,7 +47,7 @@ export class PoolManager {
     if (!item) return;
 
     // Cache it, add it to delay cache bucket, then return it
-    this.pool.add(key, item);
+    this.pool.set(key, item);
     this.buckets[this.currentBucket].add(key);
     return item;
   }
@@ -67,6 +67,7 @@ export class PoolManager {
     this.buckets[this.currentBucket].add(key);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
+    if (!oldKey) return;
     this.delete(oldKey, thing)
   }
 
@@ -98,13 +99,15 @@ export class PoolManager {
    */
   shardName(key) {
     const shard = key[0];
-    return `${this.basename}_${shard}.json`;
+    return `${this.basename}_${shard}`;
   }
 
 
   saveDirty() {
+    if (this.dirtyUpdated.size < 1) return;
+    
     const files = new Map();
-
+    
     // Group updated keys by shard file
     for (const key of this.dirtyUpdated) {
       const filename = this.shardName(key);
@@ -112,7 +115,9 @@ export class PoolManager {
       set.updated.add(key);
       files.set(filename, set);
     }
-
+    console.log(files);
+    
+    
     // Group deleted keys by shard file
     for (const key of this.dirtyDeleted) {
       const filename = this.shardName(key);
@@ -121,9 +126,12 @@ export class PoolManager {
       files.set(filename, set);
     }
 
+
     // Apply changes to each shard file
     for (const [filename, { updated, deleted }] of files) {
+      console.log(`loading ${filename}`);
       const json = this.tickManager.fileManager.loadJson(filename) ?? {};
+      console.log(json);
 
       // Apply deletions
       for (const key of deleted) {
@@ -135,6 +143,7 @@ export class PoolManager {
         json[key] = this.pool.get(key);
       }
 
+      console.log(`saveJson ${filename}`);
       this.tickManager.fileManager.saveJson(filename, json);
     }
 

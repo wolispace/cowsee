@@ -11,32 +11,32 @@ for (const key of ['id', 'name', 'code', 'loc']) {
   pools[key] = new PoolManager(tickManager, key, type);
 }
 
-let obj = {id:"m1", class:"mouse", loc: "0" };
-pools.id.set(obj.id, obj);
-pools.name.set(obj.class, obj.id);
-pools.loc.set(obj.loc, obj.id);
+// let obj = {id:"m1", class:"mouse", loc: "0" };
+// pools.id.set(obj.id, obj);
+// pools.name.set(obj.class, obj.id);
+// pools.loc.set(obj.loc, obj.id);
 
-obj = {id:"ma", class:"mat", loc: "0" };
-pools.id.set(obj.id, obj);
-pools.name.set(obj.class, obj.id);
-pools.loc.set(obj.loc, obj.id);
+// obj = {id:"ma", class:"mat", loc: "0" };
+// pools.id.set(obj.id, obj);
+// pools.name.set(obj.class, obj.id);
+// pools.loc.set(obj.loc, obj.id);
 
-obj = {id:"m2", class:"mouse", loc: "z" };
-pools.id.set(obj.id, obj);
-pools.name.set(obj.class, obj.id);
-pools.loc.set(obj.loc, obj.id);
+// obj = {id:"m2", class:"mouse", loc: "z" };
+// pools.id.set(obj.id, obj);
+// pools.name.set(obj.class, obj.id);
+// pools.loc.set(obj.loc, obj.id);
 
-obj = {id:"c1", class:"cat", loc: "0" };
-pools.id.set(obj.id, obj);
-pools.name.set(obj.class, obj.id);
-pools.loc.set(obj.loc, obj.id);
+// obj = {id:"c1", class:"cat", loc: "0" };
+// pools.id.set(obj.id, obj);
+// pools.name.set(obj.class, obj.id);
+// pools.loc.set(obj.loc, obj.id);
 
-pools.id.saveDirty();
-pools.name.saveDirty();
-pools.loc.saveDirty();
+// pools.id.saveDirty();
+// pools.name.saveDirty();
+// pools.loc.saveDirty();
 
-// obj = pools.id.get('m1');
-// console.log(obj);
-// const names = pools.name.get('mouse');
-// console.log(names);
+const found = pools.id.get('m1');
+console.log(found);
+const names = pools.name.get('mouse');
+console.log(names);
 console.log('-- end --');

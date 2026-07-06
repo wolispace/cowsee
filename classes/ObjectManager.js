@@ -13,7 +13,8 @@ export class ObjectManager {
   constructor(tickManager) {
     this.tickManager = tickManager;
     for (const key of ['id', 'name', 'code', 'loc']) {
-      this.pools[key] = new PoolManager(tickManager, key);
+      const type = key == 'id' ? 'map' : 'set';
+      pools[key] = new PoolManager(tickManager, key, type);
     }
   }
 

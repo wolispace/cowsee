@@ -7,14 +7,36 @@ const tickManager = new TickManager(true);
 const pools = new Map();
 
 for (const key of ['id', 'name', 'code', 'loc']) {
-  pools[key] = new PoolManager(tickManager, key);
+  const type = key == 'id' ? 'map' : 'set';
+  pools[key] = new PoolManager(tickManager, key, type);
 }
 
-//pools.id.set("AC", { id: "AC", class: "card", loc: "0" });
-//pools.id.set("m", { id: "m", class: "mouse", loc: "0" });
-//pools.id.saveDirty();
-const obj = pools.id.get('m');
-console.log(obj);
-const obj2 = pools.id.get('AC');
-console.log(obj2);
-console.log('end');
+let obj = {id:"m1", class:"mouse", loc: "0" };
+pools.id.set(obj.id, obj);
+pools.name.set(obj.class, obj.id);
+pools.loc.set(obj.loc, obj.id);
+
+obj = {id:"ma", class:"mat", loc: "0" };
+pools.id.set(obj.id, obj);
+pools.name.set(obj.class, obj.id);
+pools.loc.set(obj.loc, obj.id);
+
+obj = {id:"m2", class:"mouse", loc: "z" };
+pools.id.set(obj.id, obj);
+pools.name.set(obj.class, obj.id);
+pools.loc.set(obj.loc, obj.id);
+
+obj = {id:"c1", class:"cat", loc: "0" };
+pools.id.set(obj.id, obj);
+pools.name.set(obj.class, obj.id);
+pools.loc.set(obj.loc, obj.id);
+
+pools.id.saveDirty();
+pools.name.saveDirty();
+pools.loc.saveDirty();
+
+// obj = pools.id.get('m1');
+// console.log(obj);
+// const names = pools.name.get('mouse');
+// console.log(names);
+console.log('-- end --');

@@ -2,7 +2,7 @@
 // a decay pool that loads from disk as needed and write out at intervals
 // this manages one pool so multiple poolManagers are needed for id, name, loc etc..
 export class PoolManager {
-  basename = 'ZZ_index_'; // the base name of the files being read and written eg index_id_0_1999.json
+  basename = 'index_'; // the base name of the files being read and written eg index_id_0_1999.json
   key = ''; // keys are called 'id' 'name' etc..
   pool = new Map(); // pool of currently being interacted with objects
   buckets = [];  // buckets (array of arrays of IDs) oldest array gets ID deleted
@@ -17,9 +17,10 @@ export class PoolManager {
    * @param {string} keyName - what this pool is storing: ids, names, code, locations etc..?
    * @param {int} decaySteps 
    */
-  constructor(tickManager, keyName = 'id', decaySteps = 10) {
+  constructor(tickManager, keyName = 'id', type ='set', decaySteps = 10) {
     this.tickManager = tickManager;
     this.keyName = keyName;
+    this.type = type == 'set' ? new Set() : new Map();
     this.basename += this.keyName;
     this.buckets = Array.from({ length: decaySteps }, () => new Set());
   }
@@ -44,7 +45,7 @@ export class PoolManager {
 
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
     const item = items?.[key];
-    if (!item) return;
+    if (!item) return this.type;
 
     // Cache it, add it to delay cache bucket, then return it
     this.pool.set(key, item);
@@ -58,11 +59,20 @@ export class PoolManager {
    * @param {object} thing 
    */
   set(key, thing, oldKey = null) {
-    // If thing is a string, add it to the existing Set at this key
-    if (typeof thing === "string") {
-      this.pool.get(key)?.add(thing);
+    const existing = this.pool.get(key);
+    if (existing) {
+      if (typeof thing === "string") {
+        existing.add(thing);
+      } else {
+        this.pool.set(key, thing);
+      }      
     } else {
-      this.pool.set(key, thing);
+      if (typeof thing === "string") {
+        this.pool.set(key, new Set());
+        this.pool.get(key).add(thing);
+      } else {
+        this.pool.set(key, thing);
+      }   
     }
     this.buckets[this.currentBucket].add(key);
     this.dirtyUpdated.add(key);
@@ -115,8 +125,6 @@ export class PoolManager {
       set.updated.add(key);
       files.set(filename, set);
     }
-    console.log(files);
-    
     
     // Group deleted keys by shard file
     for (const key of this.dirtyDeleted) {
@@ -126,12 +134,9 @@ export class PoolManager {
       files.set(filename, set);
     }
 
-
     // Apply changes to each shard file
     for (const [filename, { updated, deleted }] of files) {
-      console.log(`loading ${filename}`);
       const json = this.tickManager.fileManager.loadJson(filename) ?? {};
-      console.log(json);
 
       // Apply deletions
       for (const key of deleted) {
@@ -140,10 +145,13 @@ export class PoolManager {
 
       // Apply updates
       for (const key of updated) {
-        json[key] = this.pool.get(key);
+        let value = this.pool.get(key);
+        if (value instanceof Set) {
+          value = [...value]; // convert into an array
+        }
+        json[key] = value;
+        // console.log(`adding to file`,key, this.pool, json);
       }
-
-      console.log(`saveJson ${filename}`);
       this.tickManager.fileManager.saveJson(filename, json);
     }
 

@@ -13,7 +13,7 @@ export class ObjectManager {
   constructor(tickManager) {
     this.tickManager = tickManager;
     for (const key of ['id', 'name', 'code', 'loc']) {
-      const type = key == 'id' ? 'map' : 'set';
+      const type = ['id','code'].includes(key) ? 'map' : 'set';
       this.pools[key] = new PoolManager(tickManager, key, type);
     }
   }
@@ -57,7 +57,7 @@ export class ObjectManager {
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
     console.log('ids', ids);
-    
+
     if (!ids || ids.length < 1) return;
     if (ids.length === 1) {
       return this.getCode(ids[0]);

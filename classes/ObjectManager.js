@@ -56,7 +56,7 @@ export class ObjectManager {
    */
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
-    console.log('ids', ids);
+    console.log(`find ids for ${firstword} `, ids);
 
     if (!ids || ids.length < 1) return;
     if (ids.length === 1) {
@@ -76,6 +76,19 @@ export class ObjectManager {
     }
     return '';
   };
+
+  /**
+   * Add the object to all of the pools
+   * @param {obj} obj 
+   */
+  addToPools(obj) {
+    this.pools.id.set(obj.id, obj);
+    this.pools.name.set(obj.name, obj.id);
+    this.pools.loc.set(obj.loc, obj.id);
+    if (obj.code) {
+      this.pools.code.set( obj.id, { id: obj.id, loc: obj.loc, code: obj.code });    
+    }
+  }
 
   /**
    * Save the object, if it's new create a new ID

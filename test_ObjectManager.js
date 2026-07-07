@@ -11,7 +11,7 @@ const utils = new Utilities();
 const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
-const generate = true;
+const generate = false;
 const max = 1000;
 const cleanup = generate;
 const addCode = true;
@@ -45,19 +45,52 @@ if (generate) {
 }
 
 if (addCode) {
-  const sayCommand = {
+  const commandSay = {
     id: "AB",
     class: "command",
     name: "say",
     loc: "2",
     code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
+  };
+  pools.id.set(commandSay.id, commandSay);
+  pools.name.set(commandSay.name, commandSay.id);
+  pools.loc.set(commandSay.loc, commandSay.id);
+  if (commandSay.code) {
+    pools.code.set( commandSay.id, { id: commandSay.id, loc: commandSay.loc, code: commandSay.code });    
   }
-  pools.id.set(sayCommand.id, sayCommand);
-  pools.name.set(sayCommand.name, sayCommand.id);
-  pools.loc.set(sayCommand.loc, sayCommand.id);
-  if (sayCommand.code) {
-    pools.code.set( sayCommand.id, { id: sayCommand.id, loc: sayCommand.loc, code: sayCommand.code });    
+
+  const commandThink = {
+    id: "AC",
+    class: "command",
+    name: "think",
+    loc: "2",
+    code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] . o 0 ( $text )\";\n##ponder:\nsay 'think',\"[$actor] . o 0 ( I keep thinking its Tuesday )\"`
   }
+  pools.id.set(commandThink.id, commandThink);
+  pools.name.set(commandThink.name, commandThink.id);
+  pools.loc.set(commandThink.loc, commandThink.id);
+  if (commandThink.code) {
+    pools.code.set( commandThink.id, { id: commandThink.id, loc: commandThink.loc, code: commandThink.code });    
+  }
+
+  const commandDo = {
+    id: "AD",
+    class: "command",
+    name: "do",
+    loc: "2",
+    code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`
+  }
+  pools.id.set(commandDo.id, commandDo);
+  pools.name.set(commandDo.name, commandDo.id);
+  pools.loc.set(commandDo.loc, commandDo.id);
+  if (commandDo.code) {
+    pools.code.set( commandDo.id, { id: commandDo.id, loc: commandDo.loc, code: commandDo.code });    
+  }
+
+  
+
+
+
 }
 
 const found = objectManager.findById('1');

@@ -45,7 +45,7 @@ export class IdManager {
     const id = this.encodeInt(this.counter);
     this.counter++;
     this.save();
-    utils.log('id', id);
+    //utils.log('id', id);
     return id;
   }
 

@@ -13,16 +13,19 @@ const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
 const generate = false;
+const max = 1000;
 const cleanup = false;
 
 console.log('---------------------------- START -------------------------------');
+const start = Date.now();
 
 if (cleanup) {
   deleteTestFiles();
+  idManager.counter = 0;
+  idManager.save();
 }
 
 if (generate) {
-  const max = 100;
   let counter = 0; 
   while (counter++ < max) {
     const obj = { id: idManager.new(),
@@ -37,20 +40,25 @@ if (generate) {
   }
 
   for (const pool of Object.values(pools)) {
-    console.log(pool.basename);
-    console.log('-----');
+    //console.log(pool.basename);
+    //console.log('-----');
     pool.saveDirty();
   }
 
 }
 
-const found = objectManager.findById('Gi');
+const found = objectManager.findById('1x');
 console.log('found', found);
 
-const list = objectManager.findByName('book');
+found.code = 'THIS IS A TEST';
+pools.id.set(found.id, found);
+pools.id.saveDirty();
+
+const list = objectManager.findByName('pen');
 console.log('find by name', list);
 
-console.log('----------- END -----------');
+const elapsed = Date.now() - start;
+console.log(`----------- END ----------- ${elapsed}ms`);
 
 function deleteTestFiles() {
   const dir = "_data";

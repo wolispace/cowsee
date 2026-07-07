@@ -59,9 +59,6 @@ export class PoolManager {
    * @param {object} thing 
    */
   set(key, thing, oldKey = null) {
-    console.log(key);
-    console.log(thing);
-
     const existing = this.pool.get(key);
     if (existing) {
       if (typeof thing === "string") {
@@ -78,7 +75,7 @@ export class PoolManager {
       }   
     }
     this.buckets[this.currentBucket].add(key);
-    console.log(`adding [${key}] into ${this.keyName} dirtyUpdated`);
+    // console.log(`adding [${key}] into ${this.keyName} dirtyUpdated`);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
     if (!oldKey) return;
@@ -96,7 +93,7 @@ export class PoolManager {
   delete(key, thing) {
     if (typeof thing === "string") {
       this.pool.get(key)?.delete(thing);
-      console.log('adding [${key}] into dirtyUpdated 2');
+      // console.log('adding [${key}] into dirtyUpdated 2');
       this.dirtyUpdated.add(key);
       return;
     }
@@ -119,7 +116,7 @@ export class PoolManager {
     } catch {
       console.trace(`woah ${key}`);
     }
-    return `${this.basename}_${shard}`;
+    return `${this.basename}_${shard.toLocaleLowerCase()}`;
   }
 
 
@@ -127,8 +124,6 @@ export class PoolManager {
     if (this.dirtyUpdated.size < 1) return;
     
     const files = new Map();
-    
-    console.log(this.dirtyUpdated);
 
     // Group updated keys by shard file
     for (const key of this.dirtyUpdated) {

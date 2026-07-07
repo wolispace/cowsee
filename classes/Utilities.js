@@ -12,7 +12,7 @@ export class Utilities {
    */
   log(...args) {
     const line = `${new Date().toISOString()} ${args.join(' ')}\n`;
-    process.stdout.write(line);
+   // process.stdout.write(line);
     fs.appendFileSync(this.logfile, line);
   };
 

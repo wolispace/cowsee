@@ -38,21 +38,26 @@ export class ObjectManager {
 
   /**
    * Retruns the code for the object.id passed in
+   * for consistancy, even tho its just a string, its stored in an array with one element
    * @param {id} id 
    * @returns {string}
    */
-  getCode(obj) {
-    return this.pools.code(id);
+  getCode(id) {
+    const codeObj = this.pools.code.get(id);
+    return codeObj?.code ?? '';
   };
 
   /**
    * Find the first named command (look in player then location then globaly so long as its a command)
+   * "find" means look for it somewhere, where as "get" means we know it so get it.
    * @param {string} firstword 
    * @param {object} context 
    * @returns {string} return the code from the bext match object
    */
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
+    console.log('ids', ids);
+    
     if (!ids || ids.length < 1) return;
     if (ids.length === 1) {
       return this.getCode(ids[0]);
@@ -69,6 +74,7 @@ export class ObjectManager {
         return obj.code;
       }
     }
+    return '';
   };
 
   /**

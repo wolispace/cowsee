@@ -8,13 +8,13 @@ import { PoolManager } from './PoolManager.js';
  */
 export class ObjectManager {
   idManager = new IdManager();
-  pools = new Map();
+  pools = {};
 
   constructor(tickManager) {
     this.tickManager = tickManager;
     for (const key of ['id', 'name', 'code', 'loc']) {
       const type = key == 'id' ? 'map' : 'set';
-      pools[key] = new PoolManager(tickManager, key, type);
+      this.pools[key] = new PoolManager(tickManager, key, type);
     }
   }
 
@@ -33,7 +33,7 @@ export class ObjectManager {
    * @returns {array} of IDs with this name
    */
   findByName(name) {
-    return this.pools.name(name);
+    return this.pools.name.get(name);
   };
 
   /**

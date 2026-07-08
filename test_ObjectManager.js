@@ -18,6 +18,21 @@ const addCode = true;
 console.log('---------------------------- START -------------------------------');
 const start = Date.now();
 
+
+
+/* 
+YOU ARE HERE
+
+Detect arrays and convert into Set
+     if (existing instanceof Array) {
+        existing = new Set(existing);
+      }
+
+        do we need to detect Object and convert into Map()?
+
+        OR>.. just drop Set and Map as they dont add much and simplify json encoding.
+*/
+
 if (cleanup) {
   deleteTestFiles();
   objectManager.idManager.counter = 0;
@@ -30,6 +45,7 @@ if (generate) {
     const obj = { 
       id: objectManager.idManager.new(),
       class : randomName(),
+      qty: 1,
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
       colour: randomColour() };
     objectManager.addToPools(obj);
@@ -41,7 +57,7 @@ if (addCode) {
 }
 
 
-const found = objectManager.findById('1');
+const found = objectManager.getById('1');
 console.log('found', found);
 
 found.code = 'THIS IS A TEST 3';

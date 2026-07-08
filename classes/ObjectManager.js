@@ -13,7 +13,7 @@ export class ObjectManager {
   constructor(tickManager) {
     this.tickManager = tickManager;
     for (const key of ['id', 'name', 'code', 'loc']) {
-      const type = ['id','code'].includes(key) ? 'map' : 'set';
+      const type = ['id', 'code'].includes(key) ? 'map' : 'set';
       this.pools[key] = new PoolManager(tickManager, key, type);
     }
   }
@@ -23,18 +23,27 @@ export class ObjectManager {
    * @param {string} id 
    * @returns {object}
    */
-  findById(id) {
+  getById(id) {
     return this.pools.id.get(id);
   };
 
   /**
    * Returns an array of IDs with the required word eg: "cat" returns ["AB", "Ax" ...]
-   * @param {string} name 
+   * @param {string} key 
    * @returns {array} of IDs with this name
    */
-  findByName(name) {
-    return this.pools.name.get(name);
+  findByName(key) {
+    return this.pools.name.get(key);
   };
+
+  /**
+   * Returns an array of object IDs in the location
+   * @param {string} key 
+   * @returns {array}
+   */
+  findInLoc(key) {
+    return this.pools.loc.get(key);
+  }
 
   findMatchInLoc(obj, context) {
     // TODO: for creating a new object that merges with an existing
@@ -90,10 +99,12 @@ export class ObjectManager {
   addToPools(obj) {
     this.pools.id.set(obj.id, obj);
     this.pools.name.set(obj.name, obj.id);
-     this.pools.name.set(obj.class, obj.id);
+    this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
+
+    
     if (obj.code) {
-      this.pools.code.set( obj.id, { id: obj.id, loc: obj.loc, code: obj.code });    
+      this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
     }
   }
 
@@ -108,39 +119,77 @@ export class ObjectManager {
     }
   }
 
-  /** ?? REDUNDANT - we add to pools and the pools save
-   * Save the object, if it's new create a new ID
-   * - whole objects live in the 'id' pool as this is their key 
-   * - the write all dirty object to disk straight away as a test
-   * @param {object} obj 
-   */
-  saveObject(obj) {
-    // make sure we have an id
-    if (!obj.id) {
-      obj.id = this.idManager.new();
+  lookLoc(context) {
+    // generate a list of objects in the locs context
+    // add to the message (somehow flag only the loc needs to see it)
+    let msg = 'Looking around you see ';
+    const ids = this.findInLoc(context.loc);
+    for (const id of ids) {
+      const obj = this.getById(id);
+      msg += this.formatObject(obj);
+      msg += ', ';
+    }
+    // TODO.. find last ', ' and replace with 'and '
+    msg = msg.replace(/,([^,]*)$/, ' and$1');
+    msg += '\n\n';
+
+    console.log('lookLoc', msg);
+    this.tickManager.messageManager.add({
+      msg: msg,
+      context: context
+    });
+  }
+
+  formatObject(obj) {
+    let longName = this.formatQty(obj);
+
+    longName += ' ' + this.formatPlural(obj);
+    if (obj.name) {
+      longName += ' called ' + obj.name;
+    }
+    return longName;
+
+  }
+
+  formatQty(obj) {
+    obj.qty = !obj.qty ? 1 : obj.qty;
+    let qtyText = obj.qty;
+    if (obj.qty == 1) {
+      qtyText = ['a','e','i','o','u'].includes(obj.class[0]) ? 'an' : 'a';
+    } else if (obj.qty == 2) {
+      qtyText = 'two';
+    } else if (obj.qty == 3) {
+      qtyText = 'three';
+    } else if (obj.qty == -1) {
+      qtyText = 'the';
+    } else if (obj.qty < 10) {
+      qtyText = obj.qty;
+    } else if (obj.qty < 20) {
+      qtyText = 'some';
+    } else if (obj.qty < 99) {
+      qtyText = 'many';
+    } else if (obj.qty < 999) {
+      qtyText = 'hundreds of';
+    } else if (obj.qty < 999999) {
+      qtyText = 'thousands of';
+    } else if (obj.qty < 999999999) {
+      qtyText = 'millions of';
     } else {
-      const oldObj = this.pools.id.get(obj.id);
+      qtyText = 'a mind-boggling quantity of';
     }
-    this.pools.id.save(obj.id, obj);
+    return qtyText;
+  }
 
-    // TODO: saving an object also saves it into the loc and name etc pools
-    // if the Object is being edited (not new) then we may need to remove old data from pools before saving
-
-
-  
-    if (oldObj) {
-      this.pools.name.delete(oldObj.class, obj.id);
+  formatPlural(obj) {
+    let pluralName = '';
+    if (obj.qty > 1) {
+      var plurals = { 'knife': 'knives', 'sheep': 'sheep', 'loaf': 'loaves', 'mouse': 'mice' };
+      var plural = plurals[obj.class];
+      pluralName = (plural === undefined) ? obj.class + 's' : plural;
+    } else {
+      pluralName = obj.class;
     }
-    this.pools.name.saveIn(obj.class, obj.id);
-
-    if (oldObj) {
-      this.pools.name.delete(oldObj.class, obj.id);
-    }
-    this.pools.name.saveIn('loc', obj.id);
-
-
-    // DEBUG: save all dirty();
-    this.pools.id.saveDirty();
+    return pluralName;
   }
 
 };

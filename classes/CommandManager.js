@@ -63,7 +63,7 @@ export class CommandManager extends Queue {
     // Build execution context
     this.context = {
       actor: commandObj.actor || 'wolis',
-      loc: commandObj.loc || 'A',
+      loc: commandObj.loc || '2',
       niceness: commandObj.niceness || 0,
       cmd_text: rest,
       prefix: '',
@@ -164,7 +164,7 @@ export class CommandManager extends Queue {
     let value = this.context[varName] ?? '';
 
     for (let i = 1; i < parts.length; i++) {
-      const obj = this.tickManager.objectManager.findById(value);
+      const obj = this.tickManager.objectManager.getById(value);
       if (!obj) return '';
       value = obj[parts[i]] ?? '';
     }
@@ -373,15 +373,16 @@ export class CommandManager extends Queue {
     percentbar: (rest) => { console.log(`percentbar`) },
     refresh: (rest) => { console.log(`refresh`) },
     relook: (rest) => {
-      const loc = this.resolveValue(rest.trim());
-      // TODO: this "force" should queue up a new command from the 'actor' to 'look'
-      this.tickManager.messageManager.add({
+      this.context.loc = this.resolveValue(rest.trim());
+      this.tickManager.objectManager.lookLoc(this.context);
+      // // TODO: this "force" should queue up a new command from the 'actor' to 'look'
+      // this.tickManager.messageManager.add({
 
-        msg: `force:look ${loc}`,
-        actor: this.context.actor,
-        loc: loc,
-        context: this.context
-      });
+      //   msg: `force:look ${loc}`,
+      //   actor: this.context.actor,
+      //   loc: loc,
+      //   context: this.context
+      // });
     },
     runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },

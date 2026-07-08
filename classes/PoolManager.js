@@ -17,10 +17,10 @@ export class PoolManager {
    * @param {string} keyName - what this pool is storing: ids, names, code, locations etc..?
    * @param {int} decaySteps 
    */
-  constructor(tickManager, keyName = 'id', type ='set', decaySteps = 10) {
+  constructor(tickManager, keyName = 'id', type = 'set', decaySteps = 10) {
     this.tickManager = tickManager;
     this.keyName = keyName;
-    this.type = type == 'set' ? new Set() : new Map();
+    this.type = type; // == 'set' ? new Set() : new Map();
     this.basename += this.keyName;
     this.buckets = Array.from({ length: decaySteps }, () => new Set());
   }
@@ -44,9 +44,14 @@ export class PoolManager {
     if (cached) return cached;
 
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
-    const item = items?.[key];
-    if (!item) return this.type;
-
+    let item = items?.[key];
+    if (!item) {
+      return this.type === 'set' ? new Set() : undefined;
+    }
+    // convert item from the json into a Set or leave as an object
+    if (this.type === 'set') {
+      item = new Set(item);
+    }
     // Cache it, add it to delay cache bucket, then return it
     this.pool.set(key, item);
     this.buckets[this.currentBucket].add(key);
@@ -65,14 +70,14 @@ export class PoolManager {
         existing.add(thing);
       } else {
         this.pool.set(key, thing);
-      }      
+      }
     } else {
       if (typeof thing === "string") {
         this.pool.set(key, new Set());
         this.pool.get(key).add(thing);
       } else {
         this.pool.set(key, thing);
-      }   
+      }
     }
     this.buckets[this.currentBucket].add(key);
     // console.log(`adding [${key}] into ${this.keyName} dirtyUpdated`);
@@ -122,7 +127,7 @@ export class PoolManager {
 
   saveDirty() {
     if (this.dirtyUpdated.size < 1) return;
-    
+
     const files = new Map();
 
     // Group updated keys by shard file
@@ -133,7 +138,7 @@ export class PoolManager {
       set.updated.add(key);
       files.set(filename, set);
     }
-    
+
     // Group deleted keys by shard file
     for (const key of this.dirtyDeleted) {
       const filename = this.shardName(key);
@@ -190,7 +195,7 @@ export class PoolManager {
    */
   bucketsHas(key) {
     let keyCount = 0;
-    for (const bucket of buckets) {
+    for (const bucket of this.buckets) {
       if (bucket.has(key)) {
         keyCount++;
         if (keyCount > 1) {

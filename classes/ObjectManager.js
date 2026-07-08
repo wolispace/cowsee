@@ -30,7 +30,7 @@ export class ObjectManager {
   /**
    * Returns an array of IDs with the required word eg: "cat" returns ["AB", "Ax" ...]
    * @param {string} key 
-   * @returns {array} of IDs with this name
+   * @returns {set} of IDs with this name
    */
   findByName(key) {
     return this.pools.name.get(key);
@@ -39,7 +39,7 @@ export class ObjectManager {
   /**
    * Returns an array of object IDs in the location
    * @param {string} key 
-   * @returns {array}
+   * @returns {set}
    */
   findInLoc(key) {
     return this.pools.loc.get(key);
@@ -73,20 +73,22 @@ export class ObjectManager {
     const ids = this.findByName(firstword);
     console.log(`find ids for ${firstword} `, ids);
 
-    if (!ids || ids.length < 1) return;
-    if (ids.length === 1) {
-      return this.getCode(ids[0]);
+    if (!ids || ids.size < 1) return '';
+    if (ids.size === 1) {
+      const [id] = ids;
+      return this.getCode(id);
     }
-    for (let index = 0; index < ids.length; index++) {
-      const obj = ids[index];
+    for (const id of ids) {
+      const obj = this.getById(id);
+      if (!obj) continue;
       if (obj.loc === context.actor) {
-        return obj.code;
+        return this.getCode(id);
       }
       if (obj.loc === context.loc) {
-        return obj.code;
+        return this.getCode(id);
       }
       if (obj.class === 'command') {
-        return obj.code;
+        return this.getCode(id);
       }
     }
     return '';
@@ -102,7 +104,7 @@ export class ObjectManager {
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
 
-    
+
     if (obj.code) {
       this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
     }
@@ -155,7 +157,7 @@ export class ObjectManager {
     obj.qty = !obj.qty ? 1 : obj.qty;
     let qtyText = obj.qty;
     if (obj.qty == 1) {
-      qtyText = ['a','e','i','o','u'].includes(obj.class[0]) ? 'an' : 'a';
+      qtyText = ['a', 'e', 'i', 'o', 'u'].includes(obj.class[0]) ? 'an' : 'a';
     } else if (obj.qty == 2) {
       qtyText = 'two';
     } else if (obj.qty == 3) {

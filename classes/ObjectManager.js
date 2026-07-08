@@ -102,7 +102,6 @@ export class ObjectManager {
    * - merging the objects with existing json on disk
    */
   savePoolsToDisk() {
-    console.log('savePoolsToDisk');
     // save changed pools to disk
     for (const pool of Object.values(this.pools)) {
       pool.saveDirty();

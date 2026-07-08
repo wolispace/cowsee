@@ -31,49 +31,15 @@ if (generate) {
       id: objectManager.idManager.new(),
       class : randomName(),
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
-      coloue: randomColour() };
+      colour: randomColour() };
     objectManager.addToPools(obj);
   }
 }
 
 if (addCode) {
-  const commandSay = {
-    id: "AB",
-    class: "command",
-    name: "say",
-    loc: "2",
-    code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
-  };
-  objectManager.addToPools(commandSay);
-
-  const commandThink = {
-    id: "AC",
-    class: "command",
-    name: "think",
-    loc: "2",
-    code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] . o 0 ( $text )\";\n##ponder:\nsay 'think',\"[$actor] . o 0 ( I keep thinking its Tuesday )\"`
-  }
-  objectManager.addToPools(commandThink);
-
-  const commandDo = {
-    id: "AD",
-    class: "command",
-    name: "do",
-    loc: "2",
-    code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`
-  }
-  objectManager.addToPools(commandDo);
-
-  const commandCreate = {
-    id: "AE",
-    class: "command",
-    name: "create",
-    loc: "2",
-    code: `get $text;\nnew $text;\nsay 'create',"[$actor] creates [$target]";\nrelook $loc;`
-  }
-  objectManager.addToPools(commandCreate);
-
+  initCommands();
 }
+
 
 const found = objectManager.findById('1');
 console.log('found', found);
@@ -109,6 +75,41 @@ function deleteTestFiles() {
     if (file.startsWith("index") && file.endsWith(".json")) {
       fs.rmSync(path.join(dir, file), { force: true });
     }
+  }
+}
+
+function initCommands() {
+  const commands = [{
+    class: "command",
+    name: "say",
+    code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
+  },{
+    class: "command",
+    name: "think",
+    code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] . o 0 ( $text )\";\n##ponder:\nsay 'think',\"[$actor] . o 0 ( I keep thinking its Tuesday )\"`
+  },{
+    class: "command",
+    name: "do",
+    code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`
+  },{
+    class: "command",
+    name: "create",
+    code: `get $text;\nnew $text;\nsay 'create',"[$actor] creates [$target]";\nrelook $loc;`
+  },{
+    class: "command",
+    name: "find",
+    code: `get $target;\nvar $dest to $target's loc;\nif $target > 0 then itshere else fail;\n##itshere:\nvar $dest to $target's loc;\nsay 'msg',\"[$actor] finds [$target] in [$dest]\";\n##fail;\nsay 'msg',\"[$actor] wants to find '$cmd_text' but has no idea where to start looking\";`
+  },{
+    class: "command",
+    name: "look",
+    code: `say 'look',"[$actor] looks around";\nrelook $loc;`
+  }
+];
+
+  for (const obj of commands) {
+    obj.id = objectManager.idManager.new();
+    obj.loc = '2';
+    objectManager.addToPools(obj);
   }
 }
 

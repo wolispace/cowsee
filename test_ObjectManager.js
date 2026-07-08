@@ -3,8 +3,6 @@ import path from "path";
 
 import { Utilities } from './classes/Utilities.js';
 import { TickManager } from './classes/TickManager.js';
-import { IdManager } from './classes/IdManager.js';
-import { CommandManager } from "./classes/CommandManager.js";
 
 const tickManager = new TickManager(true);
 const utils = new Utilities();
@@ -12,7 +10,7 @@ const utils = new Utilities();
 const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
-const generate = false;
+const generate = true;
 const max = 50;
 const cleanup = generate;
 const addCode = true;
@@ -29,10 +27,11 @@ if (cleanup) {
 if (generate) {
   let counter = 0; 
   while (counter++ < max) {
-    const obj = { id: objectManager.idManager.new(),
+    const obj = { 
+      id: objectManager.idManager.new(),
       class : randomName(),
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
-      code: 'TEST CODE' };
+      coloue: randomColour() };
     objectManager.addToPools(obj);
   }
 }
@@ -72,21 +71,18 @@ if (addCode) {
     loc: "2",
     code: `get $text;\nnew $text;\nsay 'create',"[$actor] creates [$target]";\nrelook $loc;`
   }
-  objectManager.addToPools(commandDo);
+  objectManager.addToPools(commandCreate);
 
 }
 
 const found = objectManager.findById('1');
 console.log('found', found);
 
-found.code = 'THIS IS A TEST 2';
+found.code = 'THIS IS A TEST 3';
 pools.id.set(found.id, found);
 pools.code.set(found.id, {id:found.id, loc:found.loc, code: found.code});
 
-// write oneoff changes to disk
-for (const pool of Object.values(pools)) {
-  pool.saveDirty();
-}
+objectManager.savePoolsToDisk();
 
 const list = objectManager.findByName('pen');
 console.log('find by name', list);
@@ -121,4 +117,8 @@ function randomName() {
   return names[utils.random(names.length)];
 }
 
+function randomColour() {
+  const names = ['wheat', 'sage', 'teal', 'tomato', 'dodgerblue']
+  return names[utils.random(names.length)];
+}
 

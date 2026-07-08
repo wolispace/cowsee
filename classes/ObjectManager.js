@@ -36,6 +36,12 @@ export class ObjectManager {
     return this.pools.name.get(name);
   };
 
+  findMatchInLoc(obj, context) {
+    // TODO: for creating a new object that merges with an existing
+    // loop through all objects in the location and if they match the obj.class, obj.colour etc..
+    // then return it else return null
+  }
+
   /**
    * Retruns the code for the object.id passed in
    * for consistancy, even tho its just a string, its stored in an array with one element
@@ -84,6 +90,7 @@ export class ObjectManager {
   addToPools(obj) {
     this.pools.id.set(obj.id, obj);
     this.pools.name.set(obj.name, obj.id);
+     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
     if (obj.code) {
       this.pools.code.set( obj.id, { id: obj.id, loc: obj.loc, code: obj.code });    
@@ -91,6 +98,18 @@ export class ObjectManager {
   }
 
   /**
+   * Write to disk all of the changed pools
+   * - merging the objects with existing json on disk
+   */
+  savePoolsToDisk() {
+    console.log('savePoolsToDisk');
+    // save changed pools to disk
+    for (const pool of Object.values(this.pools)) {
+      pool.saveDirty();
+    }
+  }
+
+  /** ?? REDUNDANT - we add to pools and the pools save
    * Save the object, if it's new create a new ID
    * - whole objects live in the 'id' pool as this is their key 
    * - the write all dirty object to disk straight away as a test

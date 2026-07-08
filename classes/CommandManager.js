@@ -344,22 +344,30 @@ export class CommandManager extends Queue {
       const om = this.tickManager.objectManager;
       const loc = this.context.loc;
       // find existing object with same class+name in this loc to stack onto
-      let existing = null;
-      for (const [id, obj] of om.pool) {
-        if (obj.loc === loc && obj.class === parsed.class && obj.name === parsed.name) {
-          existing = obj; break;
-        }
-      }
-      if (existing) {
-        existing.qty = (existing.qty || 1) + parsed.qty;
-        om.save(existing);
-        this.context.target = existing.id;
-      } else {
-        const obj = { loc, ...parsed };
-        om.save(obj);
-        this.context.target = obj.id;
-      }
-      this.context.new_id = this.context.target;
+      // let existing = null;
+      // for (const [id, obj] of om.pool) {
+      //   if (obj.loc === loc && obj.class === parsed.class && obj.name === parsed.name) {
+      //     existing = obj; break;
+      //   }
+      // }
+      // if (existing) {
+      //   existing.qty = (existing.qty || 1) + parsed.qty;
+      //   om.save(existing);
+      //   this.context.target = existing.id;
+      // } else {
+      //   const obj = { loc, ...parsed };
+      //   om.save(obj);
+      //   this.context.target = obj.id;
+      // }
+      
+      // quick and simple object creator
+      const obj = { loc, ...parsed };
+      obj.id = om.idManager.new();
+      om.addToPools(obj);
+      this.context.target = this.context.cmd_text;
+      this.context.new_id = obj.id;
+      console.log('created', obj, this.context);
+
     },
     nudge: (rest) => { console.log(`nudge`) },
     percentbar: (rest) => { console.log(`percentbar`) },

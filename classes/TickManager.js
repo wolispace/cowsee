@@ -42,5 +42,7 @@ export class TickManager {
 
     // Nothing left to do
     this.#isProcessing = false;
+    // TODO: do this better - when idle save changes to disk
+    this.objectManager.savePoolsToDisk();
   }
 }

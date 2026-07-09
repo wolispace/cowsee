@@ -39,10 +39,16 @@ section.info {
   padding: 1rem;
 }
 
+section.info div {
+ padding-bottom: 0.5rem; 
+}
+
 .searchform {
   background-color: rgba(0,0,0,.25);
   padding:.25rem;
   padding-left:.5rem;
+  width: 100%;
+  display: flex;
 }
 
 .searchlabel {
@@ -56,6 +62,7 @@ section.info {
   width: 4rem;
   background-color: wheat;
   padding-left: .5rem;
+  width: 60%;
 }
 
 .searchbutton {

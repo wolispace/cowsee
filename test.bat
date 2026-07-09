@@ -1,1 +1,1 @@
-node test.js
+node test_ObjectManager.js

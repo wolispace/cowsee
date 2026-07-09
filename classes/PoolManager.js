@@ -115,13 +115,8 @@ export class PoolManager {
    * @returns {string}
    */
   shardName(key) {
-    let shard = '_';
-    try {
-      shard = key[0] ?? '_';
-    } catch {
-      console.trace(`woah ${key}`);
-    }
-    return `${this.basename}_${shard.toLocaleLowerCase()}`;
+    if (!key) key = '_';
+    return `${this.basename}_${key.charCodeAt(0)}`;
   }
 
 

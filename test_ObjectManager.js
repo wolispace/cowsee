@@ -11,26 +11,12 @@ const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 50;
+const max = 10;
 const cleanup = generate;
 const addCode = true;
 
 console.log('---------------------------- START -------------------------------');
 const start = Date.now();
-
-
-/* 
-YOU ARE HERE
-
-Detect arrays and convert into Set
-     if (existing instanceof Array) {
-        existing = new Set(existing);
-      }
-
-        do we need to detect Object and convert into Map()?
-
-        OR>.. just drop Set and Map as they dont add much and simplify json encoding.
-*/
 
 if (cleanup) {
   deleteTestFiles();
@@ -55,21 +41,20 @@ if (addCode) {
   initCommands();
 }
 
-
+// manual tinker
 const found = objectManager.getById('1');
 console.log('found', found);
+found.code = `if target of push then pushme;\n##pushme: say 'say' "Stop it!"; `;
+objectManager.addToPools(found);
 
-found.code = 'THIS IS A TEST 3';
-pools.id.set(found.id, found);
-pools.code.set(found.id, {id:found.id, loc:found.loc, code: found.code});
-
+// save all pools to disk
 objectManager.savePoolsToDisk();
 
 const list = objectManager.findByName('pen');
-console.log('find by name', list);
+console.log('find all pens by name', list);
 
 const codeText1 = objectManager.getCode(found.id);
-console.log('codeText1', codeText1);
+console.log('get the code form found', codeText1);
 
 const context = {
   loc: '2',
@@ -77,7 +62,7 @@ const context = {
 }
 
 const codeText2 = objectManager.findCommand('say', context);
-console.log('codeText', codeText2);
+console.log('find a command ', codeText2);
 
 
 

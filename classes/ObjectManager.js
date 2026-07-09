@@ -12,7 +12,7 @@ export class ObjectManager {
 
   constructor(tickManager) {
     this.tickManager = tickManager;
-    for (const key of ['id', 'name', 'code', 'loc']) {
+    for (const key of ['id', 'name', 'code', 'loc', 'trigger']) {
       const type = ['id', 'code'].includes(key) ? 'map' : 'set';
       this.pools[key] = new PoolManager(tickManager, key, type);
     }
@@ -71,7 +71,7 @@ export class ObjectManager {
    */
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
-    console.log(`find ids for ${firstword} `, ids);
+    // console.log(`find ids for ${firstword} `, ids);
 
     if (!ids || ids.size < 1) return '';
     if (ids.size === 1) {
@@ -94,6 +94,23 @@ export class ObjectManager {
     return '';
   };
 
+  findTrigger(context) {
+    const found = this.pools.trigger.get(context.trigger);
+    // loop through these to see if they are in the context.loc
+    const inLoc = this.pools.loc.get(context.loc);
+    const triggerable = new Set(
+      [...found].filter(x => inLoc.has(x))
+    )
+
+    console.log('triggers found', triggerable);
+    for ( const id in triggerable) {
+      const obj = this.getById(id);
+      // TODO: prepare the context for this execution
+      context.actor = id;
+      this.tickManager.commandManager.runCodeFrom(obj.code, context.block, context);
+    }
+  }
+
   /**
    * Add the object to all of the pools
    * @param {obj} obj 
@@ -104,10 +121,27 @@ export class ObjectManager {
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
 
-
     if (obj.code) {
       this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
+      this.addTriggers(obj);
     }
+  }
+
+  /**
+   * Adds a trigger word if this code is triggred in some way
+   * @param {object} obj 
+   * @returns 
+   */
+  addTriggers(obj) {
+    // combined
+    const pattern = /\bif\s+(reacting\s+to|target\s+of)\s+(\w+)\s+then\s+(\w+);/i;
+    const match = obj.code.match(pattern);
+    if (!match) return;
+    const type = match[1].includes('target') ? 'target' : 'reacts';
+    const trigger = match[2];
+    const block = match[3];
+    console.log('trigger', { type, trigger, block });
+    this.pools.trigger.set(trigger, obj.id);
   }
 
   /**

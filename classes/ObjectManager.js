@@ -24,7 +24,9 @@ export class ObjectManager {
    * @returns {object}
    */
   getById(id) {
-    return this.pools.id.get(id);
+    const set = this.pools.id.get(id);
+    if (!set || set.size === 0) return undefined;
+    return set.values().next().value;
   };
 
   /**
@@ -58,7 +60,9 @@ export class ObjectManager {
    * @returns {string}
    */
   getCode(id) {
-    const codeObj = this.pools.code.get(id);
+    const set = this.pools.code.get(id);
+    if (!set || set.size === 0) return '';
+    const codeObj = set.values().next().value;
     return codeObj?.code ?? '';
   };
 
@@ -96,19 +100,21 @@ export class ObjectManager {
 
   findTrigger(context) {
     const found = this.pools.trigger.get(context.trigger);
-    if (!found) return;
+    if (!found || found.size < 1) return;
     // loop through these to see if they are in the context.loc
     const inLoc = this.pools.loc.get(context.loc);
+    if (!inLoc || inLoc.size < 1) return;
     const triggerable = new Set(
       [...found].filter(obj => inLoc.has(obj.id))
-    )
+    );
 
-    console.log('triggers found', triggerable, JSON.stringify(found));
-    for ( const triggered of triggerable) {
+    console.log('triggers found', triggerable, JSON.stringify([...found]));
+    for (const triggered of triggerable) {
       const obj = this.getById(triggered.id);
-      // TODO: prepare the context for this execution
+      if (!obj) continue;
+      // prepare the context for this execution
       context.actor = obj.id;
-      this.tickManager.commandManager.runCodeFrom(obj.code, triggable.block, context);
+      this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
   }
 

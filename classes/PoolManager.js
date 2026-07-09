@@ -44,14 +44,7 @@ export class PoolManager {
     if (cached) return cached;
 
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
-    let item = items?.[key];
-    if (!item) {
-      return this.type === 'set' ? new Set() : undefined;
-    }
-    // convert item from the json into a Set or leave as an object
-    if (this.type === 'set') {
-      item = new Set(item);
-    }
+    const item = new Set(items?.[key] ?? undefined);
     // Cache it, add it to delay cache bucket, then return it
     this.pool.set(key, item);
     this.buckets[this.currentBucket].add(key);
@@ -64,27 +57,18 @@ export class PoolManager {
    * @param {object} thing 
    */
   set(key, thing, oldKey = null) {
-    const existing = this.pool.get(key);
-    if (existing) {
-      if (typeof thing === "string") {
-        existing.add(thing);
-      } else {
-        this.pool.set(key, thing);
-      }
-    } else {
-      if (typeof thing === "string") {
-        this.pool.set(key, new Set());
-        this.pool.get(key).add(thing);
-      } else {
-        this.pool.set(key, thing);
-      }
+    let existing = this.pool.get(key);
+    if (!existing) {
+      existing = new Set();
+      this.pool.set(key, existing);
     }
+    existing.add(thing);
     this.buckets[this.currentBucket].add(key);
     // console.log(`adding [${key}] into ${this.keyName} dirtyUpdated`);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
     if (!oldKey) return;
-    this.delete(oldKey, thing)
+    this.delete(oldKey, thing);
   }
 
   /**
@@ -96,15 +80,16 @@ export class PoolManager {
    * @returns 
    */
   delete(key, thing) {
-    if (typeof thing === "string") {
-      this.pool.get(key)?.delete(thing);
-      // console.log('adding [${key}] into dirtyUpdated 2');
-      this.dirtyUpdated.add(key);
-      return;
+    const existing = this.pool.get(key);
+    if (existing) {
+      if (thing === undefined || thing === null) {
+        this.pool.delete(key);
+        this.dirtyDeleted.add(key);
+      } else {
+        existing.delete(thing);
+        this.dirtyUpdated.add(key);
+      }
     }
-
-    this.pool.delete(key);
-    this.dirtyDeleted.add(key);
   }
 
 
@@ -122,7 +107,7 @@ export class PoolManager {
 
 
   saveDirty() {
-    if (this.dirtyUpdated.size < 1) return;
+    if (this.dirtyUpdated.size < 1 && this.dirtyDeleted.size < 1) return;
 
     const files = new Map();
 
@@ -159,7 +144,6 @@ export class PoolManager {
           value = [...value]; // convert into an array
         }
         json[key] = value;
-        // console.log(`adding to file`,key, this.pool, json);
       }
       this.tickManager.fileManager.saveJson(filename, json);
     }

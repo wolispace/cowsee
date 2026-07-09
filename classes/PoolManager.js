@@ -116,7 +116,8 @@ export class PoolManager {
    */
   shardName(key) {
     if (!key) key = '_';
-    return `${this.basename}_${key.charCodeAt(0)}`;
+    return `${this.basename}_${key[0]}`;
+    //return `${this.basename}_${key.charCodeAt(0)}`;
   }
 
 

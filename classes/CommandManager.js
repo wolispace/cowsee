@@ -94,6 +94,7 @@ export class CommandManager extends Queue {
    * @param {object} context 
    */
   runCodeFrom(code, block, context = this.context) {
+    console.log('running ', block, context.actor, context.loc);
     this.context = context;
     // Partition cowscript code into sub-blocks
     this.partitionCode(code);

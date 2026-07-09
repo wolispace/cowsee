@@ -44,7 +44,9 @@ if (addCode) {
 // manual tinker
 const found = objectManager.getById('1');
 console.log('found', found);
-found.code = `if target of push then pushme;\n##pushme: say 'say' "Stop it!"; `;
+found.class = 'box';
+found.loc = '2';
+found.code = `if reacting to think then thinkme;\n##thinkme: say 'say' "Stop it!"; `;
 objectManager.addToPools(found);
 
 // save all pools to disk

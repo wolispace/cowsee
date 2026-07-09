@@ -13,7 +13,7 @@ export class ObjectManager {
   constructor(tickManager) {
     this.tickManager = tickManager;
     for (const key of ['id', 'name', 'code', 'loc', 'trigger']) {
-      const type = ['id', 'code'].includes(key) ? 'map' : 'set';
+      const type = ['id', 'code', 'trigger'].includes(key) ? 'map' : 'set';
       this.pools[key] = new PoolManager(tickManager, key, type);
     }
   }
@@ -96,18 +96,19 @@ export class ObjectManager {
 
   findTrigger(context) {
     const found = this.pools.trigger.get(context.trigger);
+    if (!found) return;
     // loop through these to see if they are in the context.loc
     const inLoc = this.pools.loc.get(context.loc);
     const triggerable = new Set(
-      [...found].filter(x => inLoc.has(x))
+      [...found].filter(obj => inLoc.has(obj.id))
     )
 
-    console.log('triggers found', triggerable);
-    for ( const id in triggerable) {
-      const obj = this.getById(id);
+    console.log('triggers found', triggerable, JSON.stringify(found));
+    for ( const triggered of triggerable) {
+      const obj = this.getById(triggered.id);
       // TODO: prepare the context for this execution
-      context.actor = id;
-      this.tickManager.commandManager.runCodeFrom(obj.code, context.block, context);
+      context.actor = obj.id;
+      this.tickManager.commandManager.runCodeFrom(obj.code, triggable.block, context);
     }
   }
 
@@ -140,8 +141,7 @@ export class ObjectManager {
     const type = match[1].includes('target') ? 'target' : 'reacts';
     const trigger = match[2];
     const block = match[3];
-    console.log('trigger', { type, trigger, block });
-    this.pools.trigger.set(trigger, obj.id);
+    this.pools.trigger.set(trigger, {id: obj.id, block: block});
   }
 
   /**
@@ -169,7 +169,6 @@ export class ObjectManager {
     msg = msg.replace(/,([^,]*)$/, ' and$1');
     msg += '\n\n';
 
-    console.log('lookLoc', msg);
     this.tickManager.messageManager.add({
       msg: msg,
       context: context

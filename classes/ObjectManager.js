@@ -98,7 +98,9 @@ export class ObjectManager {
     return '';
   };
 
+
   findTrigger(context) {
+    if (!context) return;
     const found = this.pools.trigger.get(context.trigger);
     if (!found || found.size < 1) return;
     // loop through these to see if they are in the context.loc
@@ -113,7 +115,8 @@ export class ObjectManager {
       const obj = this.getById(triggered.id);
       if (!obj) continue;
       // prepare the context for this execution
-      context.actor = obj.id;
+      context.actorId = obj.id;
+      context.actor = 'the box';
       this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
   }

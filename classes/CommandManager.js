@@ -80,11 +80,8 @@ export class CommandManager extends Queue {
       });
       return;
     };
-    // // Partition cowscript code into sub-blocks
-    // this.partitionCode(code);
-    // // Execute from __start
-    // this.runSub('__start');
     this.runCodeFrom(code, '__start');
+    console.log(`running ${firstword}`, JSON.stringify(this.context));
   }
 
   /**
@@ -94,7 +91,7 @@ export class CommandManager extends Queue {
    * @param {object} context 
    */
   runCodeFrom(code, block, context = this.context) {
-    console.log('running ', block, context.actor, context.loc);
+    console.log('running ', block, JSON.stringify(context), JSON.stringify(this.context), code);
     this.context = context;
     // Partition cowscript code into sub-blocks
     this.partitionCode(code);
@@ -143,6 +140,7 @@ export class CommandManager extends Queue {
    * Executes a single statement
    */
   executeStatement(statement) {
+    console.log({statement});
     const trimmed = statement.trim();
     if (!trimmed) return;
 
@@ -415,8 +413,6 @@ export class CommandManager extends Queue {
    * @param {object} data 
    */
   reactions(data) {
-    // find all objects that react to this trigger word in this location
-    //console.log(`What is triggered by ${data.context.trigger} in ${data.context.loc}?`, data);
     // eg 'ask', there is a robot in your location that "has statement "if taget of 'say' then answer;
     this.tickManager.objectManager.findTrigger(data.context);
 

@@ -46,7 +46,8 @@ const found = objectManager.getById('1');
 console.log('found', found);
 found.class = 'box';
 found.loc = '2';
-found.code = `if reacting to think then thinkme;\n##thinkme: say 'say' "Stop it!"; `;
+found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says Stop it!";`;
+`say 'think',"[$actor] . o 0 ( $text )"`
 objectManager.addToPools(found);
 
 // save all pools to disk

@@ -181,14 +181,15 @@ export class ObjectManager {
     // add to the message (somehow flag only the loc needs to see it)
     let msg = 'Looking around you see ';
     const ids = this.findInLoc(context.loc);
+    let delim = '';
     for (const id of ids) {
       const obj = this.getById(id);
-      msg += this.formatObject(obj);
-      msg += ', ';
+      msg += `${delim}${this.formatObject(obj)}`;
+      delim = ', ';
     }
     // TODO.. find last ', ' and replace with 'and '
     msg = msg.replace(/,([^,]*)$/, ' and$1');
-    msg += '\n\n';
+    msg += '.';
 
     this.tickManager.messageManager.add({
       msg: msg,

@@ -139,11 +139,19 @@ export class PoolManager {
 
       // Apply updates
       for (const key of updated) {
-        let value = this.pool.get(key);
-        if (value instanceof Set) {
-          value = [...value]; // convert into an array
+        let poolValue = this.pool.get(key);
+        if (poolValue instanceof Set) {
+          poolValue = [...poolValue]; // convert into an array
         }
-        json[key] = value;
+        // Merge if diskValue exists
+        const diskValue = this.tickManager.fileManager.loadJson(filename, json);
+        let merged;
+        if (Array.isArray(diskValue)) {
+          merged = [...new Set([...diskValue, ...poolValue])];
+        } else {
+          merged = poolValue;
+        }
+        json[key] = merged;
       }
       this.tickManager.fileManager.saveJson(filename, json);
     }

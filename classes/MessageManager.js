@@ -30,7 +30,6 @@ export class MessageManager extends Queue {
   }
 
   send(data) {
-    data.objects = this.tickManager.objectManager.pool;
     const payload = `data: ${JSON.stringify(data)}\n\n`;
     for (const result of this.#clients) result.write(payload);
     this.tickManager.commandManager.reactions(data);

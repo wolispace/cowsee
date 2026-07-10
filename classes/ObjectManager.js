@@ -9,6 +9,8 @@ import { PoolManager } from './PoolManager.js';
 export class ObjectManager {
   idManager = new IdManager();
   pools = {};
+  reactions = 0;
+  maxReactions = 5;
 
   constructor(tickManager) {
     this.tickManager = tickManager;
@@ -109,6 +111,11 @@ export class ObjectManager {
     const triggerable = new Set(
       [...found].filter(obj => inLoc.has(obj.id))
     );
+
+    if (triggerable.size < 1) return;
+
+    // dont do infinate reactions
+    if (this.reactions++ >= this.maxReactions) return;
 
     console.log('triggers found', triggerable, JSON.stringify([...found]));
     for (const triggered of triggerable) {

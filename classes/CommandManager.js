@@ -8,10 +8,12 @@ export class CommandManager extends Queue {
 
   subs = {};
   context = {}; // the context the statement is run agains (which actor which location etc..)
+  
   constructor(tickManager) {
     super();
     this.tickManager = tickManager;
     this.utils = new Utilities();
+
   }
 
   handle(request, result) {
@@ -56,6 +58,8 @@ export class CommandManager extends Queue {
    * @param {object} commandObj { cmd: "say hello everyone", actor: "wolis", loc: "A", niceness: 0 }
    */
   parse(commandObj) {
+    // reset reactions after a human sends something
+    this.tickManager.objectManager.reactions = 0;
     const rawCmd = commandObj.cmd;
     if (!rawCmd) return;
 

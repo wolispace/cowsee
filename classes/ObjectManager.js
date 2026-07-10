@@ -101,6 +101,11 @@ export class ObjectManager {
   };
 
 
+  /**
+   * Runs code from a triggered object
+   * @param {object} context 
+   * @returns 
+   */
   findTrigger(context) {
     if (!context) return;
     const found = this.pools.trigger.get(context.trigger);
@@ -117,13 +122,13 @@ export class ObjectManager {
     // dont do infinate reactions
     if (this.reactions++ >= this.maxReactions) return;
 
-    console.log('triggers found', triggerable, JSON.stringify([...found]));
+    // console.log('triggers found', triggerable, JSON.stringify([...found]));
     for (const triggered of triggerable) {
       const obj = this.getById(triggered.id);
       if (!obj) continue;
       // prepare the context for this execution
       context.actorId = obj.id;
-      context.actor = 'the box';
+      context.actor = `the ${obj.class}`;
       this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
   }

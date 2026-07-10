@@ -85,7 +85,7 @@ export class CommandManager extends Queue {
       return;
     };
     this.runCodeFrom(code, '__start');
-    console.log(`running ${firstword}`, JSON.stringify(this.context));
+    // console.log(`running ${firstword}`, JSON.stringify(this.context));
   }
 
   /**
@@ -95,7 +95,7 @@ export class CommandManager extends Queue {
    * @param {object} context 
    */
   runCodeFrom(code, block, context = this.context) {
-    console.log('running ', block, JSON.stringify(context), JSON.stringify(this.context), code);
+    // console.log('running ', block, JSON.stringify(context), JSON.stringify(this.context), code);
     this.context = context;
     // Partition cowscript code into sub-blocks
     this.partitionCode(code);
@@ -144,7 +144,7 @@ export class CommandManager extends Queue {
    * Executes a single statement
    */
   executeStatement(statement) {
-    console.log({statement});
+    // console.log({statement});
     const trimmed = statement.trim();
     if (!trimmed) return;
 

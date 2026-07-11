@@ -46,6 +46,7 @@ let found = objectManager.getById('1');
 console.log('found', found);
 found.class = 'box';
 found.loc = '2';
+found.colour = 'pink',
 found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
 `say 'think',"[$actor] . o 0 ( $text )"`
 objectManager.addToPools(found);
@@ -54,9 +55,20 @@ found = objectManager.getById('3');
 console.log('found', found);
 found.class = 'parrot';
 found.loc = '2';
+found.colour = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks . o O ( $cmd_text )";`;
 `say 'think',"[$actor] . o 0 ( $text )"`
 objectManager.addToPools(found);
+
+// add the wolisp play id 'w'
+const player = {
+  id: 'w',
+  class: 'player',
+  name: 'wolis',
+  loc: '2',
+  colour: 'goldenrod'
+}
+objectManager.addToPools(player);
 
 // save all pools to disk
 objectManager.savePoolsToDisk();

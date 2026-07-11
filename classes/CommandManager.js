@@ -36,7 +36,7 @@ export class CommandManager extends Queue {
   doNext() {
     if (this.pending()) {
       const command = this.get();
-      command.actor = 'wolis'; // DEBUG - player is wolis. this is not right, [$actor] needs to be converted ingo an ID which then is converted into a name and a link in the browser
+      command.actor = 'w'; // DEBUG - player object ID. When auth exists, this comes from the session
       this.parse(command);
     }
   }
@@ -332,8 +332,39 @@ export class CommandManager extends Queue {
       // include the trigger word 'say' or 'ask' into the context so we can find which objects react to it
       this.context.trigger = (match[1]);
 
+      let msg = this.utils.trimQuotes(match[2].trim());
+      const objs = {};
+      const om = this.tickManager.objectManager;
+
+      // Phase 1: Process [$var] (bracketed = linkable objects)
+      msg = msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
+        const value = this.context[varName] ?? '';
+        const obj = om.getById(value);
+        if (obj) {
+          obj.longname = obj.longname || om.formatObject(obj);
+          objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
+          return `{${value}}`;
+        }
+        return value; // fallback: plain text substitution
+      });
+
+      // Phase 2: Process $var (non-bracketed = styled but not linked)
+      msg = msg.replace(/\$(\w+)/g, (_, varName) => {
+        const value = this.context[varName] ?? '';
+        const obj = om.getById(value);
+        if (obj) {
+          obj.longname = obj.longname || om.formatObject(obj);
+          if (!objs[value]) {
+            objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
+          }
+          return `{${value}}`;
+        }
+        return value; // plain text: substitute literally
+      });
+
       this.tickManager.messageManager.add({
-        msg:  this.utils.trimQuotes(match[2].trim()),
+        msg,
+        objs,
         context: this.context
       });
     },

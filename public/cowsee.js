@@ -18,11 +18,7 @@ function appendInfo(text) {
   const json = JSON.parse(text);
   console.log(json);
   if (json.msg) {
-      // 1. Replace variables from context: [$actor] or $actor
-      json.msg = json.msg.replace(/\[\$(\w+)\]/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
-      json.msg = json.msg.replace(/\$(\w+)/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
-
-      // 2. Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
+      // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
       json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
           const obj = json.objs?.[id];
           if (!obj) return match;
@@ -37,10 +33,15 @@ function appendInfo(text) {
 
           // Format value with styling if colour is defined
           const color = obj.colour || obj.color;
+          let styled = val;
           if (color && val !== '') {
-              return `<span style="color:${color}" style="color: ${color};">${val}</span>`;
+              styled = `<span style="color: ${color}">${val}</span>`;
           }
-          return val;
+
+          // Wrap in clickable link if object is linkable
+
+              return `<a href="#" class="obj-link" data-id="${id}" title="Examine ${val}">${styled}</a>`;
+          return styled;
       });
 
       json.msg = json.msg.replace(/\s+/g, ' ').trim();
@@ -59,6 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cmd: q })
     });
+  });
+
+  // Delegated click handler for object links (examine on click)
+  document.querySelector('.info').addEventListener('click', (e) => {
+    const link = e.target.closest('.obj-link');
+    if (link) {
+      e.preventDefault();
+      const id = link.dataset.id;
+      fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cmd: `examine ${id}` })
+      });
+    }
   });
 });
 ``

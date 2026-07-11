@@ -74,11 +74,12 @@ export class CommandManager extends Queue {
       rel: '',
       target: ''
     };
+    // add
+    const objs = {}
+    objs[this.context.actor] = this.tickManager.objectManager.getById(this.context.actor);
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {
-        const objs = {}
-        objs[this.context.actor] = this.tickManager.objectManager.getById(this.context.actor);
         this.tickManager.messageManager.add({
         msg: `{${this.context.actor}} tries to ${rawCmd}, but nothing happens`,
         objs: objs,
@@ -335,38 +336,9 @@ export class CommandManager extends Queue {
       this.context.trigger = (match[1]);
 
       let msg = this.utils.trimQuotes(match[2].trim());
-      const objs = {};
-      const om = this.tickManager.objectManager;
-
-      // Phase 1: Process [$var] (bracketed = linkable objects)
-      msg = msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
-        const value = this.context[varName] ?? '';
-        const obj = om.getById(value);
-        if (obj) {
-          obj.longname = obj.longname || om.formatObject(obj);
-          objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
-          return `{${value}}`;
-        }
-        return value; // fallback: plain text substitution
-      });
-
-      // Phase 2: Process $var (non-bracketed = styled but not linked)
-      msg = msg.replace(/\$(\w+)/g, (_, varName) => {
-        const value = this.context[varName] ?? '';
-        const obj = om.getById(value);
-        if (obj) {
-          obj.longname = obj.longname || om.formatObject(obj);
-          if (!objs[value]) {
-            objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
-          }
-          return `{${value}}`;
-        }
-        return value; // plain text: substitute literally
-      });
-
+      
       this.tickManager.messageManager.add({
         msg,
-        objs,
         context: this.context
       });
     },
@@ -386,7 +358,7 @@ export class CommandManager extends Queue {
 
       new: (rest) => {
       const parsed = this.parseObj(this.resolveValue(rest.trim()));
-      const om = this.tickManager.objectManager;
+      const objectManager = this.tickManager.objectManager;
       const loc = this.context.loc;
       // find existing object with same class+name in this loc to stack onto
       // let existing = null;
@@ -407,12 +379,10 @@ export class CommandManager extends Queue {
       
       // quick and simple object creator
       const obj = { loc, ...parsed };
-      obj.id = om.idManager.new();
-      om.addToPools(obj);
+      obj.id = objectManager.idManager.new();
+      objectManager.addToPools(obj);
       this.context.target = this.context.cmd_text;
       this.context.new_id = obj.id;
-      console.log('created', obj, this.context);
-
     },
   
 

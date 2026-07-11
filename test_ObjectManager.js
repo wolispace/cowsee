@@ -11,7 +11,7 @@ const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 10;
+const max =10_000;
 const cleanup = generate;
 const addCode = true;
 
@@ -34,6 +34,9 @@ if (generate) {
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
       colour: randomColour() };
     objectManager.addToPools(obj);
+    if (counter % 100 === 0) {
+      process.stdout.write(":");
+    }
   }
 }
 
@@ -89,8 +92,13 @@ console.log('find a command ', codeText2);
 
 
 
-const elapsed = Date.now() - start;
-console.log(`----------- END ----------- ${elapsed}ms`);
+let elapsed = Date.now() - start;
+let units = 'ms';
+if (elapsed > 1000) {
+  elapsed = elapsed / 1000;
+  units = 's'; 
+}
+console.log(`----------- END ----------- ${elapsed}${units}`);
 
 function deleteTestFiles() {
   const dir = "_data";

@@ -42,7 +42,7 @@ export class PoolManager {
   get(key) {
     const cached = this.pool.get(key);
     if (cached) return cached;
-
+    console.log(`not cached ${key}`);
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
     const item = new Set(items?.[key] ?? undefined);
     // Cache it, add it to delay cache bucket, then return it

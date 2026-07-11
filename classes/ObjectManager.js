@@ -220,6 +220,49 @@ export class ObjectManager {
     });
   }
 
+  /**
+   * Add all referenced objects into this context from "{Ax} says hi to {b2}"
+   * @param {object} data 
+   * @returns {object}
+   */
+  prepContext(data) {
+    data.objs = data.objs ?? {};
+      // Phase 1: Process [$var] (bracketed = linkable objects)
+      data.msg = data.msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
+        const value = data.context[varName] ?? '';
+        const obj = this.getById(value);
+        if (obj) {
+          obj.longname = obj.longname || this.formatObject(obj);
+          data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
+          return `{${value}}`;
+        }
+        return value; // fallback: plain text substitution
+      });
+
+      // Phase 2: Process $var (non-bracketed = styled but not linked)
+      data.msg = data.msg.replace(/\$(\w+)/g, (_, varName) => {
+        const value = data.context[varName] ?? '';
+        const obj = this.getById(value);
+        if (obj) {
+          obj.longname = obj.longname || this.formatObject(obj);
+          if (!data.objs[value]) {
+            data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
+          }
+          return `{${value}}`;
+        }
+        return value; // plain text: substitute literally
+      });
+// -----------------
+    // const names = ['actor','target','second'];
+    // for (const name of names) {
+    //   if (!data.context[name]) continue;
+    //   const obj = this.getById(data.context[name]);
+    //   obj.longname = this.formatObject(obj);
+    //   data.objs[obj.id] = obj;
+    // }
+    return data;
+  }
+
   formatObject(obj) {
     let longName = this.formatQty(obj);
 

@@ -36,7 +36,6 @@ export class CommandManager extends Queue {
   doNext() {
     if (this.pending()) {
       const command = this.get();
-      command.actor = 'w'; // DEBUG - player object ID. When auth exists, this comes from the session
       this.parse(command);
     }
   }
@@ -66,7 +65,7 @@ export class CommandManager extends Queue {
     const { firstword, rest } = this.splitFirstWord(rawCmd);
     // Build execution context
     this.context = {
-      actor: commandObj.actor || 'wolis',
+      actor: commandObj.actor || 'w',
       loc: commandObj.loc || '2',
       niceness: commandObj.niceness || 0,
       cmd_text: rest,
@@ -78,8 +77,11 @@ export class CommandManager extends Queue {
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {
+        const objs = {}
+        objs[this.context.actor] = this.tickManager.objectManager.getById(this.context.actor);
         this.tickManager.messageManager.add({
-        msg: `[$actor] trys to ${rawCmd}, but nothing happens`,
+        msg: `{${this.context.actor}} tries to ${rawCmd}, but nothing happens`,
+        objs: objs,
         context: this.context
       });
       return;

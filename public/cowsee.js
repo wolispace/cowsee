@@ -1,6 +1,9 @@
 // Connect to your SSE endpoint
 const ev = new EventSource("/events");
 
+// TODO set this when we log in
+const thisPlayer = 'w';
+
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
   appendInfo( e.data);
@@ -27,7 +30,7 @@ function appendInfo(text) {
           let val = obj[prop] !== undefined ? obj[prop] : '';
 
           // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
-          if (prop === 'longname' && json.context && id === json.context.actor) {
+          if (prop === 'longname' && json.context && id === thisPlayer) {
               val = `${val} (you)`;
           }
 
@@ -40,14 +43,16 @@ function appendInfo(text) {
 
           // Wrap in clickable link if object is linkable
 
-              return `<a href="#" class="obj-link" data-id="${id}" title="Examine ${val}">${styled}</a>`;
+              return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a>`;
           return styled;
       });
 
       json.msg = json.msg.replace(/\s+/g, ' ').trim();
   }
-  div.innerHTML = json.msg;
-  info.appendChild(div);
+  if (json.msg) {
+    div.innerHTML = json.msg;
+    info.appendChild(div);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -58,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cmd: q })
+      body: JSON.stringify({ actor: thisPlayer, cmd: q })
     });
   });
 

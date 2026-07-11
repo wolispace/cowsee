@@ -127,8 +127,8 @@ export class ObjectManager {
       const obj = this.getById(triggered.id);
       if (!obj) continue;
       // prepare the context for this execution
-      context.actorId = obj.id;
-      context.actor = `the ${obj.class}`;
+      context.actor = obj.id;
+      // context.actor = `the ${obj.class}`;
       this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
   }

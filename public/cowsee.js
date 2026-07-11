@@ -17,13 +17,35 @@ function appendInfo(text) {
   const div = document.createElement("div");
   const json = JSON.parse(text);
   console.log(json);
-  // TODO need to find and replace marams with values ef [$actor] becomes [87] which becomes [wolis]
   if (json.msg) {
+      // 1. Replace variables from context: [$actor] or $actor
       json.msg = json.msg.replace(/\[\$(\w+)\]/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
       json.msg = json.msg.replace(/\$(\w+)/g, (match, name) => json?.context[name] !== undefined ? json?.context[name] : '');
-      json.msg =json. msg.replace(/\s+/g, ' ').trim();
+
+      // 2. Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
+      json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
+          const obj = json.objs?.[id];
+          if (!obj) return match;
+
+          const prop = attr || 'longname';
+          let val = obj[prop] !== undefined ? obj[prop] : '';
+
+          // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
+          if (prop === 'longname' && json.context && id === json.context.actor) {
+              val = `${val} (you)`;
+          }
+
+          // Format value with styling if colour is defined
+          const color = obj.colour || obj.color;
+          if (color && val !== '') {
+              return `<span style="color:${color}" style="color: ${color};">${val}</span>`;
+          }
+          return val;
+      });
+
+      json.msg = json.msg.replace(/\s+/g, ' ').trim();
   }
-  div.textContent = json.msg;
+  div.innerHTML = json.msg;
   info.appendChild(div);
 }
 

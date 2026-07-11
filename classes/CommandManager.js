@@ -337,27 +337,21 @@ export class CommandManager extends Queue {
         context: this.context
       });
     },
-    add: (rest) => { console.log(`add`) },
-    call: (rest) => { console.log(`call`) },
-    case: (rest) => { console.log(`case`) },
-    clear: (rest) => { console.log(`clear`) },
-    code: (rest) => { console.log(`code`) },
-    copy: (rest) => { console.log(`copy`) },
-    dedup: (rest) => { console.log(`dedup`) },
-    divide: (rest) => { console.log(`divide`) },
-    find: (rest) => { console.log(`find`) },
-    fixplural: (rest) => { console.log(`fixplural`) },
-    foreach: (rest) => { console.log(`foreach`) },
-    getname: (rest) => { console.log(`getname`) },
-    goto: (rest) => { console.log(`goto`) },
-    include: (rest) => { console.log(`include`) },
-    load: (rest) => { console.log(`load`) },
-    loop: (rest) => { console.log(`loop`) },
-    mode: (rest) => { console.log(`mode`) },
-    motion: (rest) => { console.log(`motion`) },
-    msg: (rest) => { console.log(`msg`) },
-    multiply: (rest) => { console.log(`multiply`) },
-    new: (rest) => {
+
+    relook: (rest) => {
+      this.context.loc = this.resolveValue(rest.trim());
+      this.tickManager.objectManager.lookLoc(this.context);
+      // // TODO: this "force" should queue up a new command from the 'actor' to 'look'
+      // this.tickManager.messageManager.add({
+
+      //   msg: `force:look ${loc}`,
+      //   actor: this.context.actor,
+      //   loc: loc,
+      //   context: this.context
+      // });
+    },
+
+      new: (rest) => {
       const parsed = this.parseObj(this.resolveValue(rest.trim()));
       const om = this.tickManager.objectManager;
       const loc = this.context.loc;
@@ -387,21 +381,31 @@ export class CommandManager extends Queue {
       console.log('created', obj, this.context);
 
     },
+  
+
+    add: (rest) => { console.log(`add`) },
+    call: (rest) => { console.log(`call`) },
+    case: (rest) => { console.log(`case`) },
+    clear: (rest) => { console.log(`clear`) },
+    code: (rest) => { console.log(`code`) },
+    copy: (rest) => { console.log(`copy`) },
+    dedup: (rest) => { console.log(`dedup`) },
+    divide: (rest) => { console.log(`divide`) },
+    find: (rest) => { console.log(`find`) },
+    fixplural: (rest) => { console.log(`fixplural`) },
+    foreach: (rest) => { console.log(`foreach`) },
+    getname: (rest) => { console.log(`getname`) },
+    goto: (rest) => { console.log(`goto`) },
+    include: (rest) => { console.log(`include`) },
+    load: (rest) => { console.log(`load`) },
+    loop: (rest) => { console.log(`loop`) },
+    mode: (rest) => { console.log(`mode`) },
+    motion: (rest) => { console.log(`motion`) },
+    msg: (rest) => { console.log(`msg`) },
+    multiply: (rest) => { console.log(`multiply`) },
     nudge: (rest) => { console.log(`nudge`) },
     percentbar: (rest) => { console.log(`percentbar`) },
     refresh: (rest) => { console.log(`refresh`) },
-    relook: (rest) => {
-      this.context.loc = this.resolveValue(rest.trim());
-      this.tickManager.objectManager.lookLoc(this.context);
-      // // TODO: this "force" should queue up a new command from the 'actor' to 'look'
-      // this.tickManager.messageManager.add({
-
-      //   msg: `force:look ${loc}`,
-      //   actor: this.context.actor,
-      //   loc: loc,
-      //   context: this.context
-      // });
-    },
     runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },
     set: (rest) => { console.log(`set`) },

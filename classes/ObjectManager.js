@@ -179,20 +179,43 @@ export class ObjectManager {
   lookLoc(context) {
     // generate a list of objects in the locs context
     // add to the message (somehow flag only the loc needs to see it)
+
+    /* TODO, build a string with replaceable params and build an object of objects
+       msg: "Looking around you see {Ax}, {w} and {Aw} with {c} on it."
+       objs: {
+         Ax: {longname: "6 white mice", color: "white"},
+         w: {longname: "wolis", color: "dodgerblue"},
+         Aw: {longname:"an old wooden table", color: "wheat"},
+         c:  {longname: "a piece of cheese", color: "yellow"}
+       }
+       End result formatted (special handleing if the player = an id eg 'w' in this case):
+       "Looking around you see <span class='clr_white'>6 white mice</span>, 
+       <span class='clr_dodgerblue'>wolis (you)</span> and
+       <span class='clr_wheat'>an old wooden table</span> with 
+       <span class='clr_yellow'>a piece of cheese</span> on it."
+
+
+    */
+
     let msg = 'Looking around you see ';
     const ids = this.findInLoc(context.loc);
     let delim = '';
+    const objs = {};
     for (const id of ids) {
       const obj = this.getById(id);
-      msg += `${delim}${this.formatObject(obj)}`;
+      obj.longname = this.formatObject(obj);
+      objs[id] = obj;
+      msg += `${delim}{${id}}`;
       delim = ', ';
     }
-    // TODO.. find last ', ' and replace with 'and '
+    // tidy up end of sentence
     msg = msg.replace(/,([^,]*)$/, ' and$1');
     msg += '.';
 
     this.tickManager.messageManager.add({
       msg: msg,
+      loc: context.loc,
+      objs: objs,
       context: context
     });
   }

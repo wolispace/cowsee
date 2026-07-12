@@ -168,7 +168,7 @@ export class ObjectManager {
     const type = match[1].includes('target') ? 'target' : 'reacts';
     const trigger = match[2];
     const block = match[3];
-    this.pools.trigger.set(trigger, {id: obj.id, block: block});
+    this.pools.trigger.set(trigger, { id: obj.id, block: block });
   }
 
   /**
@@ -182,17 +182,11 @@ export class ObjectManager {
     }
   }
 
+  /**
+   * Generate a msg of all obj ids in the loc and adds it to the msg queue
+   * @param {object} context 
+   */
   lookLoc(context) {
-    // generate a list of objects in the locs context
-    // add to the message (somehow flag only the loc needs to see it)
-
-    /* TODO, simplify, we only need the list of object in a msg as we handle adding the objects later
-       msg: "Looking around you see {Ax}, {w} and {Aw} with {c} on it."
-"
-
-
-    */
-
     let msg = 'Looking around you see ';
     const ids = this.findInLoc(context.loc);
     let delim = '';
@@ -219,34 +213,33 @@ export class ObjectManager {
   /**
    * Add all referenced objects into this context from "{Ax} says hi to {b2}"
    * @param {object} data 
-   * @returns {object}
+   * @returns nothing, updates obj
    */
   prepContext(data) {
     data.objs = data.objs ?? {};
-      // Phase 1: Process [$var] (bracketed = linkable objects)
-      data.msg = data.msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
-        const value = data.context[varName] ?? '';
-        const obj = this.getById(value);
-        if (obj) {
-          data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
-          return `{${value}}`;
-        }
-        return value; // fallback: plain text substitution
-      });
+    // Phase 1: Process [$var] (bracketed = linkable objects)
+    data.msg = data.msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
+      const value = data.context[varName] ?? '';
+      const obj = this.getById(value);
+      if (obj) {
+        data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
+        return `{${value}}`;
+      }
+      return value; // fallback: plain text substitution
+    });
 
-      // Phase 2: Process $var (non-bracketed = styled but not linked)
-      data.msg = data.msg.replace(/\$(\w+)/g, (_, varName) => {
-        const value = data.context[varName] ?? '';
-        const obj = this.getById(value);
-        if (obj) {
-          if (!data.objs[value]) {
-            data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
-          }
-          return `{${value}}`;
+    // Phase 2: Process $var (non-bracketed = styled but not linked)
+    data.msg = data.msg.replace(/\$(\w+)/g, (_, varName) => {
+      const value = data.context[varName] ?? '';
+      const obj = this.getById(value);
+      if (obj) {
+        if (!data.objs[value]) {
+          data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
         }
-        return value; // plain text: substitute literally
-      });
-    return data;
+        return `{${value}}`;
+      }
+      return value; // plain text: substitute literally
+    });
   }
 
   /**
@@ -256,11 +249,9 @@ export class ObjectManager {
    * @returns nothing, the obj is updated
    */
   formatObject(obj) {
-    obj.showQty = this.formatQty(obj);
-    obj.plural = this.formatPlural(obj);
-
-
-    obj.longname = `${obj.showQty} ${obj.plural}`;
+    this.formatQty(obj);
+    this.formatPlural(obj);
+    obj.longname = `${obj.qtyText} ${obj.plural}`;
     if (obj.name) {
       obj.longname += ' called ' + obj.name;
     }
@@ -269,52 +260,50 @@ export class ObjectManager {
   /**
    * Formats the qty as a string eg 30 = many
    * @param {obj} obj 
-   * @returns {string}
+   * @returns nothing, updates obj
    */
   formatQty(obj) {
     obj.qty = !obj.qty ? 1 : obj.qty;
-    let qtyText = obj.qty;
+    obj.qtyText = obj.qty;
     if (obj.qty == 1) {
-      qtyText = ['a', 'e', 'i', 'o', 'u'].includes(obj.class[0]) ? 'an' : 'a';
+      obj.qtyText = ['a', 'e', 'i', 'o', 'u'].includes(obj.class[0]) ? 'an' : 'a';
     } else if (obj.qty == 2) {
-      qtyText = 'two';
+      obj.qtyText = 'two';
     } else if (obj.qty == 3) {
-      qtyText = 'three';
+      obj.qtyText = 'three';
     } else if (obj.qty == -1) {
-      qtyText = 'the';
+      obj.qtyText = 'the';
     } else if (obj.qty < 10) {
-      qtyText = obj.qty;
+      obj.qtyText = obj.qty;
     } else if (obj.qty < 20) {
-      qtyText = 'some';
+      obj.qtyText = 'some';
     } else if (obj.qty < 99) {
-      qtyText = 'many';
+      obj.qtyText = 'many';
     } else if (obj.qty < 999) {
-      qtyText = 'hundreds of';
+      obj.qtyText = 'hundreds of';
     } else if (obj.qty < 999999) {
-      qtyText = 'thousands of';
+      obj.qtyText = 'thousands of';
     } else if (obj.qty < 999999999) {
-      qtyText = 'millions of';
+      obj.qtyText = 'millions of';
     } else {
-      qtyText = 'a mind-boggling quantity of';
+      obj.qtyText = 'a mind-boggling quantity of';
     }
-    return qtyText;
   }
 
   /**
    * Formats the plural version of this object
    * @param {object} obj 
-   * @returns {string}
+   * @returns nothing, updates obj
    */
   formatPlural(obj) {
-    let pluralName = '';
+    obj.plural = '';
     if (obj.qty > 1) {
-      var plurals = { 'knife': 'knives', 'sheep': 'sheep', 'loaf': 'loaves', 'mouse': 'mice' };
-      var plural = plurals[obj.class];
-      pluralName = (plural === undefined) ? obj.class + 's' : plural;
+      const plurals = { 'knife': 'knives', 'sheep': 'sheep', 'loaf': 'loaves', 'mouse': 'mice' };
+      const plural = plurals[obj.class];
+      obj.plural = (plural === undefined) ? obj.class + 's' : plural;
     } else {
-      pluralName = obj.class;
+      obj.plural = obj.class;
     }
-    return pluralName;
   }
 
 };

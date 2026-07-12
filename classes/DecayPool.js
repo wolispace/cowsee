@@ -47,6 +47,13 @@ export class DecayPool {
   }
 
   /**
+   * Empies the pool so we can start afresh
+   */
+  clear() {
+    this.pool.clear();
+  }
+
+  /**
    * Decay old objects from the pool to clear memory
    * Move the ring buffer pointer on, delete from memory all objects in it, then clear the bucket
    */

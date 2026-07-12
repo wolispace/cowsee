@@ -11,7 +11,7 @@ const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max =10_000;
+const max =10;
 const cleanup = generate;
 const addCode = true;
 

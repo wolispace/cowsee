@@ -46,6 +46,11 @@ export class ObjectManager {
    * @returns {set}
    */
   findInLoc(key) {
+    //  so we load fresh merged data
+    if (this.pools.loc.isDirty()) {
+      this.pools.loc.saveDirty();
+      this.pools.loc.clear();
+    }
     return this.pools.loc.get(key);
   }
 
@@ -180,19 +185,9 @@ export class ObjectManager {
     // generate a list of objects in the locs context
     // add to the message (somehow flag only the loc needs to see it)
 
-    /* TODO, build a string with replaceable params and build an object of objects
+    /* TODO, simplify, we only need the list of object in a msg as we handle adding the objects later
        msg: "Looking around you see {Ax}, {w} and {Aw} with {c} on it."
-       objs: {
-         Ax: {longname: "6 white mice", color: "white"},
-         w: {longname: "wolis", color: "dodgerblue"},
-         Aw: {longname:"an old wooden table", color: "wheat"},
-         c:  {longname: "a piece of cheese", color: "yellow"}
-       }
-       End result formatted (special handleing if the player = an id eg 'w' in this case):
-       "Looking around you see <span class='clr_white'>6 white mice</span>, 
-       <span class='clr_dodgerblue'>wolis (you)</span> and
-       <span class='clr_wheat'>an old wooden table</span> with 
-       <span class='clr_yellow'>a piece of cheese</span> on it."
+"
 
 
     */

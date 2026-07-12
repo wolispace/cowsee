@@ -38,6 +38,7 @@ export class PoolManager {
    * Returns the object matching the key from the pool or add it into the pool from shard file on disk
    * @param {string} key 
    * @returns {object}
+   * 
    */
   get(key) {
     const cached = this.pool.get(key);
@@ -105,12 +106,30 @@ export class PoolManager {
     //return `${this.basename}_${key.charCodeAt(0)}`;
   }
 
+  /**
+   * Clears everything from this pool
+   */
+  clear() {
+    this.pool.clear();
+  }
 
+  /**
+   * Returns true if either update or delet is dirty
+   * @returns {boolean}
+   */
+  isDirty() {
+    return (this.dirtyUpdated.size > 0 || this.dirtyDeleted.size > 0);
+  }
+
+
+  /**
+   * Saves the dirty pool, merging whats on disk so we dont stomp over it
+   * @returns 
+   */
   saveDirty() {
-    if (this.dirtyUpdated.size < 1 && this.dirtyDeleted.size < 1) return;
+    if (!this.isDirty()) return;
 
     const files = new Map();
-
     // Group updated keys by shard file
     for (const key of this.dirtyUpdated) {
       if (!key) continue;
@@ -119,7 +138,6 @@ export class PoolManager {
       set.updated.add(key);
       files.set(filename, set);
     }
-
     // Group deleted keys by shard file
     for (const key of this.dirtyDeleted) {
       const filename = this.shardName(key);
@@ -131,6 +149,7 @@ export class PoolManager {
     // Apply changes to each shard file
     for (const [filename, { updated, deleted }] of files) {
       const json = this.tickManager.fileManager.loadJson(filename) ?? {};
+      //console.log(`saving into ${filename}`, json);
 
       // Apply deletions
       for (const key of deleted) {
@@ -144,7 +163,8 @@ export class PoolManager {
           poolValue = [...poolValue]; // convert into an array
         }
         // Merge if diskValue exists
-        const diskValue = this.tickManager.fileManager.loadJson(filename, json);
+        const diskValue = json[key];
+        //console.log('diskValue', diskValue);
         let merged;
         if (Array.isArray(diskValue)) {
           merged = [...new Set([...diskValue, ...poolValue])];
@@ -152,6 +172,12 @@ export class PoolManager {
           merged = poolValue;
         }
         json[key] = merged;
+        // refresh pool with this content..
+        const item = new Set(json?.[key] ?? undefined);
+        // Cache it, add it to decay cache bucket, then return it
+        this.pool.set(key, item);
+        this.buckets[this.currentBucket].add(key);
+        //console.log('pool', key, this.pool, item);
       }
       this.tickManager.fileManager.saveJson(filename, json);
     }

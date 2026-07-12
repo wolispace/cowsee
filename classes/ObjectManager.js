@@ -14,9 +14,8 @@ export class ObjectManager {
 
   constructor(tickManager) {
     this.tickManager = tickManager;
-    for (const key of ['id', 'name', 'code', 'loc', 'trigger']) {
-      const type = ['id', 'code', 'trigger'].includes(key) ? 'map' : 'set';
-      this.pools[key] = new PoolManager(tickManager, key, type);
+    for (const key of ['id', 'name', 'code', 'loc', 'trigger', 'info']) {
+      this.pools[key] = new PoolManager(tickManager, key);
     }
   }
 
@@ -143,10 +142,12 @@ export class ObjectManager {
    * @param {obj} obj 
    */
   addToPools(obj) {
+    this.formatObject(obj);
     this.pools.id.set(obj.id, obj);
     this.pools.name.set(obj.name, obj.id);
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
+    this.pools.info.set(obj.id, obj.info);
 
     if (obj.code) {
       this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
@@ -198,7 +199,7 @@ export class ObjectManager {
     const objs = {};
     for (const id of ids) {
       const obj = this.getById(id);
-      obj.longname = this.formatObject(obj);
+      this.formatObject(obj);
       objs[id] = obj;
       msg += `${delim}{${id}}`;
       delim = ', ';
@@ -227,7 +228,6 @@ export class ObjectManager {
         const value = data.context[varName] ?? '';
         const obj = this.getById(value);
         if (obj) {
-          obj.longname = obj.longname || this.formatObject(obj);
           data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
           return `{${value}}`;
         }
@@ -239,7 +239,6 @@ export class ObjectManager {
         const value = data.context[varName] ?? '';
         const obj = this.getById(value);
         if (obj) {
-          obj.longname = obj.longname || this.formatObject(obj);
           if (!data.objs[value]) {
             data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
           }
@@ -247,28 +246,31 @@ export class ObjectManager {
         }
         return value; // plain text: substitute literally
       });
-// -----------------
-    // const names = ['actor','target','second'];
-    // for (const name of names) {
-    //   if (!data.context[name]) continue;
-    //   const obj = this.getById(data.context[name]);
-    //   obj.longname = this.formatObject(obj);
-    //   data.objs[obj.id] = obj;
-    // }
     return data;
   }
 
+  /**
+   * Adds formatted/processed versions of values within the object. Saved to disk so we dont need to reprocess again.
+   * Each time an object is added to the pools its re formatted.
+   * @param {obj} obj 
+   * @returns nothing, the obj is updated
+   */
   formatObject(obj) {
-    let longName = this.formatQty(obj);
+    obj.showQty = this.formatQty(obj);
+    obj.plural = this.formatPlural(obj);
 
-    longName += ' ' + this.formatPlural(obj);
+
+    obj.longname = `${obj.showQty} ${obj.plural}`;
     if (obj.name) {
-      longName += ' called ' + obj.name;
+      obj.longname += ' called ' + obj.name;
     }
-    return longName;
-
   }
 
+  /**
+   * Formats the qty as a string eg 30 = many
+   * @param {obj} obj 
+   * @returns {string}
+   */
   formatQty(obj) {
     obj.qty = !obj.qty ? 1 : obj.qty;
     let qtyText = obj.qty;
@@ -298,6 +300,11 @@ export class ObjectManager {
     return qtyText;
   }
 
+  /**
+   * Formats the plural version of this object
+   * @param {object} obj 
+   * @returns {string}
+   */
   formatPlural(obj) {
     let pluralName = '';
     if (obj.qty > 1) {

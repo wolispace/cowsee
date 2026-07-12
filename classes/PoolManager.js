@@ -17,10 +17,9 @@ export class PoolManager {
    * @param {string} keyName - what this pool is storing: ids, names, code, locations etc..?
    * @param {int} decaySteps 
    */
-  constructor(tickManager, keyName = 'id', type = 'set', decaySteps = 10) {
+  constructor(tickManager, keyName = 'id', decaySteps = 10) {
     this.tickManager = tickManager;
     this.keyName = keyName;
-    this.type = type; // == 'set' ? new Set() : new Map();
     this.basename += this.keyName;
     this.buckets = Array.from({ length: decaySteps }, () => new Set());
   }
@@ -111,10 +110,11 @@ export class PoolManager {
    */
   clear() {
     this.pool.clear();
+    console.log(`cleared pool ${this.keyName}`);
   }
 
   /**
-   * Returns true if either update or delet is dirty
+   * Returns true if either update or delete is dirty
    * @returns {boolean}
    */
   isDirty() {

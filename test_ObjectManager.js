@@ -32,7 +32,9 @@ if (generate) {
       class : randomName(),
       qty: 1,
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
-      colour: randomColour() };
+      colour: randomColour() 
+    };
+    obj.info = `It's a pretty ordinary ${obj.class}`;
     objectManager.addToPools(obj);
     if (counter % 100 === 0) {
       process.stdout.write(":");

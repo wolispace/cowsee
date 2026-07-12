@@ -49,6 +49,7 @@ section.info div {
   padding-left:.5rem;
   width: 100%;
   display: flex;
+  position: fixed;
 }
 
 .searchlabel {

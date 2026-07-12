@@ -132,7 +132,7 @@ export class ObjectManager {
       if (!obj) continue;
       // prepare the context for this execution
       context.actor = obj.id;
-      // context.actor = `the ${obj.class}`;
+      obj.code = this.getCode(obj.id);
       this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
   }
@@ -142,17 +142,21 @@ export class ObjectManager {
    * @param {obj} obj 
    */
   addToPools(obj) {
+    if (obj.code) {
+      this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
+      this.addTriggers(obj);
+      delete obj.code; // const { code, ...rest } = obj; // delete obj.code using destructuring
+    }
+    if (obj.info) {
+      this.pools.info.set(obj.id, obj.info);
+      delete obj.info; // delete const { info, ...rest } = obj; // delete obj.info using destructuring
+    }
     this.formatObject(obj);
     this.pools.id.set(obj.id, obj);
     this.pools.name.set(obj.name, obj.id);
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
-    this.pools.info.set(obj.id, obj.info);
 
-    if (obj.code) {
-      this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
-      this.addTriggers(obj);
-    }
   }
 
   /**

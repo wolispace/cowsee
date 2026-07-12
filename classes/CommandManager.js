@@ -364,6 +364,30 @@ export class CommandManager extends Queue {
       }
     },
 
+    // SET handler - set object properties
+    set: (rest) => {
+      // Match: $target's host to $second or $target's hosthow to "value"
+      let match = rest.match(/^(\$\w+)\s+'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
+      if (!match) return;
+
+      const objVar = match[1].substring(1); // $target -> target
+      const prop = match[2].toLowerCase();  // host, hosthow, pose, etc.
+      const rawVal = match[3].trim();
+
+      const objId = this.context[objVar];
+      if (!objId) return;
+
+      const obj = this.tickManager.objectManager.getById(objId);
+      if (!obj) return;
+
+      // Resolve the value (handles $vars and quoted strings)
+      const val = this.resolveValue(rawVal);
+      obj[prop] = val;
+
+      // Save the updated object
+      this.tickManager.objectManager.save(obj);
+    },
+
     // SAY handler
     say: (rest) => {
       const match = rest.match(/^['"](\w+)['"]\s*,\s*(.+)$/i);

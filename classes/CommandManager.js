@@ -234,26 +234,62 @@ export class CommandManager extends Queue {
   statementList = {
     // GET handler
     get: (rest) => {
+      /*
+        get $target,$rel,$word,non-greedy in $loc;
+        - non-greedy optional 4th param 
+        - "force the mouse to jump on the cat" <- non-greedy (split on first 'to')
+        - "whisper go to the open field to bob" <- greedy (default, split on last 'to')
+
+        get $target,$rel,$second in $loc,$actor;
+        - the double $loc,$loc allows finding $target in $loc and Second in $actor
+        - second $loc is optional, defaults to $loc 
+      */
       let getLocVar = 'loc';
+      let getSecondLocVar = null;
       let variablesPart = rest;
-      let match = rest.match(/(.+)\s+in\s+\$(\w+)/i);
+      let nonGreedy = false;
+
+      // Check for two $locs: "... in $loc,$actor"
+      let match = rest.match(/(.+)\s+in\s+\$(\w+),\s*\$(\w+)/i);
       if (match) {
         variablesPart = match[1].trim();
         getLocVar = match[2];
+        getSecondLocVar = match[3];
+      } else {
+        // Check for single $loc: "... in $loc"
+        match = rest.match(/(.+)\s+in\s+\$(\w+)/i);
+        if (match) {
+          variablesPart = match[1].trim();
+          getLocVar = match[2];
+        }
       }
 
       const getLocValue = this.context[getLocVar] || '';
+      const getSecondLocValue = getSecondLocVar ? this.context[getSecondLocVar] || '' : getLocValue;
       const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
 
-      if (variables.length === 3) {
+      if (variables.length >= 3) {
+        // Check for non-greedy flag (4th parameter)
+        if (variables.length >= 4 && variables[3].toLowerCase() === 'non-greedy') {
+          nonGreedy = true;
+        }
+
         const relWords = ['to', 'on', 'in', 'at', 'under', 'towards'];
-        const relRegex = new RegExp(`^(.*?)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
-        match = this.context.cmd_text.match(relRegex);
+        let match;
+        if (nonGreedy) {
+          // Non-greedy: split on FIRST occurrence of rel word
+          const relRegex = new RegExp(`^(.*?)\s+(${relWords.join('|')})\s+(.*)$`, 'i');
+          match = this.context.cmd_text.match(relRegex);
+        } else {
+          // Greedy (default): split on LAST occurrence of rel word
+          const relRegex = new RegExp(`^(.+)\s+(${relWords.join('|')})\s+(.*)$`, 'i');
+          match = this.context.cmd_text.match(relRegex);
+        }
         if (match) {
           this.context[variables[0]] = match[1].trim(); // text
           this.context[variables[1]] = match[2].trim(); // rel
           const rawTarget = match[3].trim();
-          this.context[variables[2]] = this.resolveTarget(rawTarget, getLocValue);
+          this.context[variables[2]] = this.resolveTarget(rawTarget, getSecondLocValue);
         } else {
           this.context[variables[0]] = this.context.cmd_text;
           this.context[variables[1]] = '';

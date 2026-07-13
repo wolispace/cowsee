@@ -11,7 +11,7 @@ const objectManager = tickManager.objectManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max =10;
+const max =5;
 const cleanup = generate;
 const addCode = true;
 
@@ -58,14 +58,14 @@ objectManager.addToPools(found);
 
 found = objectManager.getById('3');
 console.log('found', found);
-found.class = 'parrot';
+found.class = 'cat';
 found.loc = '2';
 found.colour = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks . o O ( $cmd_text )";`;
 `say 'think',"[$actor] . o 0 ( $text )"`
 objectManager.addToPools(found);
 
-// add the wolisp play id 'w'
+// add the wolis player id 'w'
 const player = {
   id: 'w',
   class: 'player',
@@ -92,7 +92,8 @@ const context = {
 const codeText2 = objectManager.findCommand('say', context);
 console.log('find a command ', codeText2);
 
-
+const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
+console.log({foundByNameInLoc});
 
 let elapsed = Date.now() - start;
 let units = 'ms';

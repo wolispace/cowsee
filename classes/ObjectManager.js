@@ -36,8 +36,26 @@ export class ObjectManager {
    * @returns {set} of IDs with this name
    */
   findByName(key) {
-    return this.pools.name.get(key);
+    const name = key.replace(/a|an|the/,'').trim();
+    return this.pools.name.get(name);
   };
+
+  /**
+   * Find the first named object in the location
+   * @param {string} name 
+   * @param {string} loc 
+   * @returns {string} the ID of the found object
+   */
+  findByNameInLoc(name, loc) {
+    const inName = this.findByName(name); 
+    const inLoc = this.findInLoc(loc);
+
+    for(const key of inLoc) {
+      if (inName.has(key)) {
+        return key;
+      } 
+    }
+  }
 
   /**
    * Returns an array of object IDs in the location
@@ -135,6 +153,14 @@ export class ObjectManager {
       obj.code = this.getCode(obj.id);
       this.tickManager.commandManager.runCodeFrom(obj.code, triggered.block, context);
     }
+  }
+
+  /**
+   * Saves changes (back to the pool which eventually end up on disk)
+   * @param {object} obj 
+   */
+  save(obj) {
+    this.addToPools(obj);
   }
 
   /**

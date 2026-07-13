@@ -8,7 +8,7 @@ export class CommandManager extends Queue {
 
   subs = {};
   context = {}; // the context the statement is run agains (which actor which location etc..)
-  
+
   constructor(tickManager) {
     super();
     this.tickManager = tickManager;
@@ -80,7 +80,7 @@ export class CommandManager extends Queue {
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {
-        this.tickManager.messageManager.add({
+      this.tickManager.messageManager.add({
         msg: `{${this.context.actor}} tries to ${rawCmd}, but nothing happens`,
         objs: objs,
         context: this.context
@@ -175,7 +175,7 @@ export class CommandManager extends Queue {
   resolveValue(token) {
     const t = token.trim();
     if ((t.startsWith('"') && t.endsWith('"')) ||
-        (t.startsWith("'") && t.endsWith("'"))) {
+      (t.startsWith("'") && t.endsWith("'"))) {
       return t.substring(1, t.length - 1);
     }
     if (!t.startsWith('$')) return t;
@@ -197,22 +197,22 @@ export class CommandManager extends Queue {
    * e.g. "3 small black fluffy mice" → { qty, colour, attribs, class, name }
    */
   parseObj(str) {
-    const colours = ['red','orange','yellow','green','blue','purple','pink','black','white','grey','gray','brown','silver','gold'];
-    const sizes   = ['tiny','small','little','large','big','huge','giant','massive'];
-    const words   = str.trim().replace(/^["']|["']$/g, '').split(/\s+/);
+    const colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'black', 'white', 'grey', 'gray', 'brown', 'silver', 'gold'];
+    const sizes = ['tiny', 'small', 'little', 'large', 'big', 'huge', 'giant', 'massive'];
+    const words = str.trim().replace(/^["']|["']$/g, '').split(/\s+/);
     let qty = 1;
     let colour = '', attribs = [], cls = '', name = '';
     let i = 0;
     if (/^\d+$/.test(words[0])) { qty = parseInt(words[i++]); }
-    const articles = ['a','an','the','some'];
+    const articles = ['a', 'an', 'the', 'some'];
     if (articles.includes(words[i]?.toLowerCase())) i++;
     while (i < words.length) {
       const w = words[i].toLowerCase();
-      if (!colour && colours.includes(w))      { colour = w; i++; }
-      else if (sizes.includes(w))              { attribs.push(w); i++; }
-      else                                     { break; }
+      if (!colour && colours.includes(w)) { colour = w; i++; }
+      else if (sizes.includes(w)) { attribs.push(w); i++; }
+      else { break; }
     }
-    cls  = words[i]   || '';
+    cls = words[i] || '';
     name = words.slice(i + 1).join(' ');
     return { qty, colour, attribs: attribs.join(' '), class: cls, name };
   }
@@ -233,20 +233,21 @@ export class CommandManager extends Queue {
   // all of the cowmands or statements of a block in cowscript
   statementList = {
     // GET handler
-    get: (rest) => {
-      /*
-        get $target,$rel,$word,non-greedy in $loc;
-        - non-greedy optional 4th param 
-        - "force the mouse to jump on the cat" <- non-greedy (split on first 'to')
-        - "whisper go to the open field to bob" <- greedy (default, split on last 'to')
+    /*
+      get $target,$rel,$word,non-greedy in $loc;
+      - non-greedy optional 4th param 
+      - "force the mouse to jump on the cat" <- non-greedy (split on first 'to')
+      - "whisper go to the open field to bob" <- greedy (default, split on last 'to')
 
-        get $target,$rel,$second in $loc,$actor;
-        - the double $loc,$loc allows finding $target in $loc and Second in $actor
-        - second $loc is optional, defaults to $loc 
-      */
-      let getLocVar = 'loc';
-      let getSecondLocVar = null;
-      let variablesPart = rest;
+      get $target,$rel,$second in $loc,$actor;
+      - the double $loc,$loc allows finding $target in $loc and Second in $actor
+      - second $loc is optional, defaults to $loc 
+    */
+
+    get: (rest) => {
+      let variablesPart = '';
+      let getLocVar = '';
+      let getSecondLocVar = '';
       let nonGreedy = false;
 
       // Check for two $locs: "... in $loc,$actor"
@@ -263,41 +264,47 @@ export class CommandManager extends Queue {
           getLocVar = match[2];
         }
       }
+      console.log({ variablesPart, getLocVar, getSecondLocVar, nonGreedy });
 
       const getLocValue = this.context[getLocVar] || '';
       const getSecondLocValue = getSecondLocVar ? this.context[getSecondLocVar] || '' : getLocValue;
       const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
-
+      this.context.findTargetInLoc = getLocValue;
+      this.context.findSecondInLoc = getSecondLocValue;
       if (variables.length >= 3) {
         // Check for non-greedy flag (4th parameter)
         if (variables.length >= 4 && variables[3].toLowerCase() === 'non-greedy') {
           nonGreedy = true;
         }
-
         const relWords = ['to', 'on', 'in', 'at', 'under', 'towards'];
         let match;
         if (nonGreedy) {
           // Non-greedy: split on FIRST occurrence of rel word
-          const relRegex = new RegExp(`^(.*?)\s+(${relWords.join('|')})\s+(.*)$`, 'i');
+          const relRegex = new RegExp(`^(.*?)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
           match = this.context.cmd_text.match(relRegex);
         } else {
           // Greedy (default): split on LAST occurrence of rel word
-          const relRegex = new RegExp(`^(.+)\s+(${relWords.join('|')})\s+(.*)$`, 'i');
+          const relRegex = new RegExp(`^(.+)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
           match = this.context.cmd_text.match(relRegex);
+          console.log({ relRegex }, this.context.cmd_text, match);
         }
         if (match) {
-          this.context[variables[0]] = match[1].trim(); // text
+          this.context['target1'] = match[1].trim(); // text
+          this.context['rel1'] = match[2].trim(); // rel
+          this.context['second1'] = match[3].trim(); // second
+
+          this.context[variables[0]] = this.tickManager.objectManager.findByNameInLoc(match[1].trim(), getLocValue); // text
           this.context[variables[1]] = match[2].trim(); // rel
-          const rawTarget = match[3].trim();
-          this.context[variables[2]] = this.resolveTarget(rawTarget, getSecondLocValue);
+          this.context[variables[2]] = this.tickManager.objectManager.findByNameInLoc(match[3].trim(), getSecondLocValue); // second
         } else {
           this.context[variables[0]] = this.context.cmd_text;
           this.context[variables[1]] = '';
-          this.context[variables[2]] = 0;
+          this.context[variables[2]] = '';
         }
       } else if (variables.length === 1) {
         this.context[variables[0]] = this.context.cmd_text;
       }
+      console.log(this.context);
     },
 
     // IF/THEN/ELSE handler
@@ -364,10 +371,28 @@ export class CommandManager extends Queue {
       }
     },
 
+    /*
+    "put the cat on the box"
+
+    get $target,$rel,$second in $loc,$loc;
+
+    $target="the cat on the box"
+
+    $target's host to $second
+    $target's hosthow to \"$rel\"
+    $target's pose to ''
+
+    let match = rest.match(/^(\$\w+)\s+'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
+
+    */
+
     // SET handler - set object properties
     set: (rest) => {
       // Match: $target's host to $second or $target's hosthow to "value"
-      let match = rest.match(/^(\$\w+)\s+'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
+
+      // $target's hosthow to "$rel"
+      let match = rest.match(/^(\$\w+)\s*'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
+      console.log('SET', rest, match, this.context);
       if (!match) return;
 
       const objVar = match[1].substring(1); // $target -> target
@@ -379,6 +404,7 @@ export class CommandManager extends Queue {
 
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
+      console.log(objVar, obj, prop);
 
       // Resolve the value (handles $vars and quoted strings)
       const val = this.resolveValue(rawVal);
@@ -386,6 +412,8 @@ export class CommandManager extends Queue {
 
       // Save the updated object
       this.tickManager.objectManager.save(obj);
+      // DEBUG: until we have tick manager handling save to disk.
+      this.tickManager.objectManager.savePoolsToDisk();
     },
 
     // SAY handler
@@ -396,7 +424,7 @@ export class CommandManager extends Queue {
       this.context.trigger = (match[1]);
 
       let msg = this.utils.trimQuotes(match[2].trim());
-      
+
       this.tickManager.messageManager.add({
         msg,
         context: this.context
@@ -416,7 +444,7 @@ export class CommandManager extends Queue {
       // });
     },
 
-      new: (rest) => {
+    new: (rest) => {
       const parsed = this.parseObj(this.resolveValue(rest.trim()));
       const objectManager = this.tickManager.objectManager;
       const loc = this.context.loc;
@@ -436,7 +464,7 @@ export class CommandManager extends Queue {
       //   om.save(obj);
       //   this.context.target = obj.id;
       // }
-      
+
       // quick and simple object creator
       const obj = { loc, ...parsed };
       obj.id = objectManager.idManager.new();
@@ -444,7 +472,7 @@ export class CommandManager extends Queue {
       this.context.target = this.context.cmd_text;
       this.context.new_id = obj.id;
     },
-  
+
 
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
@@ -471,7 +499,6 @@ export class CommandManager extends Queue {
     refresh: (rest) => { console.log(`refresh`) },
     runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },
-    set: (rest) => { console.log(`set`) },
     swap: (rest) => { console.log(`swap`) },
     take: (rest) => { console.log(`take`) },
     unhost: (rest) => { console.log(`unhost`) },

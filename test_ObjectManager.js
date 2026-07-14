@@ -133,57 +133,51 @@ function deleteTestFiles() {
 
 function initCommands() {
   const commands = [{
-    class: "command",
     name: "say",
-    color: randomColour(),
     code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
   },{
-    class: "command",
     name: "think",
-    color: randomColour(),
     code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] . o 0 ( $text )\";\n##ponder:\nsay 'think',\"[$actor] . o 0 ( I keep thinking its Tuesday )\"`
   },{
-    class: "command",
     name: "do",
-    color: randomColour(),
     code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`
   },{
-    class: "command",
     name: "create",
-    color: randomColour(),
     code: `get $text;\nnew $text;\nsay 'create',"[$actor] creates [$target]";\nrelook $loc;`
   },{
-    class: "command",
     name: "find",
-    color: randomColour(),
     code: `get $target;\nvar $dest to $target's loc;\nif $target > 0 then itshere else fail;\n##itshere:\nvar $dest to $target's loc;\nsay 'msg',\"[$actor] finds [$target] in [$dest]\";\n##fail;\nsay 'msg',\"[$actor] wants to find '$cmd_text' but has no idea where to start looking\";`
   },{
-    class: "command",
     name: "look",
-    color: randomColour(),
     code: `say 'look',"[$actor] looks around";\nrelook $loc;`
   },{
-    class: "command",
     name: "put",
-    color: randomColour(),
     code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
+  },{
+    name: "push",
+    code: `get $target in $loc;\nclear $target,all;\nsay 'push',\"[$actor] pushes [$target]\";\nrelook $loc;`
+  },{
+    name: "pose",
+    code: `get $target,\"as\",$text,non-greedy in $loc;\nset $target's pose to $text;\nsay 'pose',\"[$actor] poses [$target] as $text\";`
   }
 ];
 
   for (const obj of commands) {
     obj.id = objectManager.idManager.new();
     obj.loc = '2';
+    obj.class = 'command',
+    obj.color = randomColour(),
     objectManager.addToPools(obj);
   }
 }
 
 function randomName() {
-  const names = ['mouse', 'hat', 'card', 'book', 'pen']
+  const names = ['mouse', 'hat', 'card', 'book', 'pen', 'frog', 'table', 'chair', 'basket']
   return names[utils.random(names.length)];
 }
 
 function randomColour() {
-  const names = ['wheat', 'seagreen', 'teal', 'tomato', 'dodgerblue', 'slategrey']
+  const names = ['wheat', 'seagreen', 'teal', 'tomato', 'dodgerblue', 'slategrey', 'plum', 'brick']
   return names[utils.random(names.length)];
 }
 

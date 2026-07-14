@@ -167,7 +167,7 @@ export class ObjectManager {
    */
   addToPools(obj) {
     if (obj.code) {
-      this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code });
+      this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code }, null, true);
       this.addTriggers(obj);
       delete obj.code; // const { code, ...rest } = obj; // delete obj.code using destructuring
     }
@@ -233,23 +233,6 @@ export class ObjectManager {
       }
     }
     const msg = this.describeScene();
-
-
-    // for (const id of unhosted.get('none')) {
-    //   msg += `${delim}{${id}}`;
-    //   if (hosted.has(id)) {
-    //     msg += ` with `;
-    //     let subDelim = '';
-    //     for (const subId of hosted.get(id)) {
-    //       msg += `${subDelim}{${subId}} ${objs[subId].hosthow} it`;
-    //       subDelim = ' and ';
-    //     }
-    //   }
-    //   delim = ', ';
-    // }
-    // // tidy up end of sentence
-    // msg = msg.replace(/,([^,]*)$/, ' and$1');
-    // msg += '.';
 
     this.tickManager.messageManager.add({
       msg: msg,

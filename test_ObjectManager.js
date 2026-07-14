@@ -8,12 +8,13 @@ const tickManager = new TickManager(true);
 const utils = new Utilities();
 
 const objectManager = tickManager.objectManager;
+const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
 const max =5;
 const cleanup = generate;
-const addCode = true;
+const addCode = generate;
 
 console.log('---------------------------- START -------------------------------');
 const start = Date.now();
@@ -84,12 +85,17 @@ console.log('find all pens by name', list);
 const codeText1 = objectManager.getCode(found.id);
 console.log('get the code form found', codeText1);
 
-const context = {
+commandManager.context = {
   loc: '2',
-  actor: 'w'
+  actor: 'w',
+  rel: 'on', 
 }
 
-const codeText2 = objectManager.findCommand('say', context);
+let variable = `"$rel"`;
+let result = commandManager.resolveValue(variable);
+console.log(`::: ${variable} = '${result}'`);
+
+const codeText2 = objectManager.findCommand('say', commandManager.context);
 console.log('find a command ', codeText2);
 
 const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
@@ -160,7 +166,7 @@ function initCommands() {
     class: "command",
     name: "put",
     color: randomColour(),
-    code: `get $target,$rel,$second in $loc,$loc;\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
+    code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nrem set $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
   }
 ];
 

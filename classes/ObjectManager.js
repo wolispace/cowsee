@@ -99,7 +99,6 @@ export class ObjectManager {
    */
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
-    // console.log(`find ids for ${firstword} `, ids);
 
     if (!ids || ids.size < 1) return '';
     if (ids.size === 1) {
@@ -144,7 +143,6 @@ export class ObjectManager {
     // dont do infinate reactions
     if (this.reactions++ >= this.maxReactions) return;
 
-    // console.log('triggers found', triggerable, JSON.stringify([...found]));
     for (const triggered of triggerable) {
       const obj = this.getById(triggered.id);
       if (!obj) continue;

@@ -88,7 +88,6 @@ export class CommandManager extends Queue {
       return;
     };
     this.runCodeFrom(code, '__start');
-    // console.log(`running ${firstword}`, JSON.stringify(this.context));
   }
 
   /**
@@ -98,7 +97,6 @@ export class CommandManager extends Queue {
    * @param {object} context 
    */
   runCodeFrom(code, block, context = this.context) {
-    // console.log('running ', block, JSON.stringify(context), JSON.stringify(this.context), code);
     this.context = context;
     // Partition cowscript code into sub-blocks
     this.partitionCode(code);
@@ -173,10 +171,15 @@ export class CommandManager extends Queue {
    * Resolve a value: literal, $var, or $actor's loc's host's loc chain
    */
   resolveValue(token) {
-    const t = token.trim();
+    let t = token.trim();
     if ((t.startsWith('"') && t.endsWith('"')) ||
       (t.startsWith("'") && t.endsWith("'"))) {
-      return t.substring(1, t.length - 1);
+        if (t.includes('$')) {
+          t = t.replace(/[$"']/g, '');
+          return this.context[t];
+        } else {
+          return t.replace(/["']/g, '');
+        }
     }
     if (!t.startsWith('$')) return t;
 
@@ -264,8 +267,6 @@ export class CommandManager extends Queue {
           getLocVar = match[2];
         }
       }
-      console.log({ variablesPart, getLocVar, getSecondLocVar, nonGreedy });
-
       const getLocValue = this.context[getLocVar] || '';
       const getSecondLocValue = getSecondLocVar ? this.context[getSecondLocVar] || '' : getLocValue;
       const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
@@ -286,7 +287,6 @@ export class CommandManager extends Queue {
           // Greedy (default): split on LAST occurrence of rel word
           const relRegex = new RegExp(`^(.+)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
           match = this.context.cmd_text.match(relRegex);
-          console.log({ relRegex }, this.context.cmd_text, match);
         }
         if (match) {
           this.context['target1'] = match[1].trim(); // text
@@ -304,7 +304,6 @@ export class CommandManager extends Queue {
       } else if (variables.length === 1) {
         this.context[variables[0]] = this.context.cmd_text;
       }
-      console.log(this.context);
     },
 
     // IF/THEN/ELSE handler
@@ -392,7 +391,6 @@ export class CommandManager extends Queue {
 
       // $target's hosthow to "$rel"
       let match = rest.match(/^(\$\w+)\s*'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
-      console.log('SET', rest, match, this.context);
       if (!match) return;
 
       const objVar = match[1].substring(1); // $target -> target
@@ -404,7 +402,6 @@ export class CommandManager extends Queue {
 
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
-      console.log(objVar, obj, prop);
 
       // Resolve the value (handles $vars and quoted strings)
       const val = this.resolveValue(rawVal);

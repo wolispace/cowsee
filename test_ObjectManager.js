@@ -95,6 +95,19 @@ console.log('find a command ', codeText2);
 const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
 console.log({foundByNameInLoc});
 
+found = objectManager.getById('3');
+console.log('found again', found);
+found.info = 'This is a brilliant cat';
+found.pocket = '6',
+found.colour = 'tomato',
+found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks . o O ( $cmd_text )";`;
+`say 'think',"[$actor] . o 0 ( $text )"`
+objectManager.addToPools(found);
+
+objectManager.savePoolsToDisk();
+
+// ---
+
 let elapsed = Date.now() - start;
 let units = 'ms';
 if (elapsed > 1000) {

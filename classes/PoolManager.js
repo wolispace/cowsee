@@ -53,18 +53,26 @@ export class PoolManager {
 
   /**
    * Add/update the object with its ID to the pool and current decay bucket
-   * @param {any} key 
+   * if oldKey is set, that key and its contents gets deleted
+   * if override is set we replace the value of key with ONLY the new thing (1:1 mapping)
+   * @param {string} key 
    * @param {object} thing 
+   * @param {string} oldKey
+   * @param {boolean} override 
    */
-  set(key, thing, oldKey = null) {
-    let existing = this.pool.get(key);
-    if (!existing) {
-      existing = new Set();
-      this.pool.set(key, existing);
+  set(key, thing, oldKey = null, override = false) {
+    if (override) {
+      // 1:1 mapping: replace entirely with a single-element Set
+      this.pool.set(key, new Set([thing]));
+    } else {
+      let existing = this.pool.get(key);
+      if (!existing) {
+        existing = new Set();
+        this.pool.set(key, existing);
+      }
+      existing.add(thing);
     }
-    existing.add(thing);
     this.buckets[this.currentBucket].add(key);
-    // console.log(`adding [${key}] into ${this.keyName} dirtyUpdated`);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
     if (!oldKey) return;
@@ -164,9 +172,13 @@ export class PoolManager {
         }
         // Merge if diskValue exists
         const diskValue = json[key];
-        //console.log('diskValue', diskValue);
         let merged;
-        if (Array.isArray(diskValue)) {
+        // If the pool holds a single object (1:1 override pattern like the id pool),
+        // always overwrite — never merge from disk, since Set dedup doesn't work
+        // on deserialized object references.
+        if (poolValue.length === 1 && typeof poolValue[0] === 'object') {
+          merged = poolValue;
+        } else if (Array.isArray(diskValue)) {
           merged = [...new Set([...diskValue, ...poolValue])];
         } else {
           merged = poolValue;
@@ -177,7 +189,6 @@ export class PoolManager {
         // Cache it, add it to decay cache bucket, then return it
         this.pool.set(key, item);
         this.buckets[this.currentBucket].add(key);
-        //console.log('pool', key, this.pool, item);
       }
       this.tickManager.fileManager.saveJson(filename, json);
     }

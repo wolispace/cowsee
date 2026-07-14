@@ -178,7 +178,7 @@ export class ObjectManager {
       delete obj.info; // delete const { info, ...rest } = obj; // delete obj.info using destructuring
     }
     this.formatObject(obj);
-    this.pools.id.set(obj.id, obj);
+    this.pools.id.set(obj.id, obj, null, true);
     this.pools.name.set(obj.name, obj.id);
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);

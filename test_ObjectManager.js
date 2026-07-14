@@ -166,7 +166,7 @@ function initCommands() {
     class: "command",
     name: "put",
     color: randomColour(),
-    code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nrem set $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
+    code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
   }
 ];
 

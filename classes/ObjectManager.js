@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { IdManager } from './IdManager.js';
 import { PoolManager } from './PoolManager.js';
+import { SetMap } from './SetMap.js';
 
 /**
  * 
@@ -36,7 +37,7 @@ export class ObjectManager {
    * @returns {set} of IDs with this name
    */
   findByName(key) {
-    const name = key.replace(/a|an|the/,'').trim();
+    const name = key.replace(/a|an|the/, '').trim();
     return this.pools.name.get(name);
   };
 
@@ -47,13 +48,13 @@ export class ObjectManager {
    * @returns {string} the ID of the found object
    */
   findByNameInLoc(name, loc) {
-    const inName = this.findByName(name); 
+    const inName = this.findByName(name);
     const inLoc = this.findInLoc(loc);
 
-    for(const key of inLoc) {
+    for (const key of inLoc) {
       if (inName.has(key)) {
         return key;
-      } 
+      }
     }
   }
 
@@ -121,7 +122,6 @@ export class ObjectManager {
     return '';
   };
 
-
   /**
    * Runs code from a triggered object
    * @param {object} context 
@@ -172,7 +172,7 @@ export class ObjectManager {
       delete obj.code; // const { code, ...rest } = obj; // delete obj.code using destructuring
     }
     if (obj.info) {
-      this.pools.info.set(obj.id, obj.info);
+      this.pools.info.set(obj.id, obj.info, null, true);
       delete obj.info; // delete const { info, ...rest } = obj; // delete obj.info using destructuring
     }
     this.formatObject(obj);
@@ -215,27 +215,104 @@ export class ObjectManager {
    * @param {object} context 
    */
   lookLoc(context) {
-    let msg = 'Looking around you see ';
     const ids = this.findInLoc(context.loc);
     let delim = '';
-    const objs = {};
+    this.hosted = new SetMap();
+    this.unhosted = new SetMap();
+    this.objs = {};
+    // find all hosted 
     for (const id of ids) {
       const obj = this.getById(id);
-      this.formatObject(obj);
-      objs[id] = obj;
-      msg += `${delim}{${id}}`;
-      delim = ', ';
+      this.objs[id] = obj;
+      this.formatObject(this.objs[id]);
+      //console.log(` obj ${id} = ${obj.class} ${obj.host}`);
+      if (obj.host) {
+        this.hosted.add(obj.host, obj.id);
+      } else {
+        this.unhosted.add('none', obj.id);
+      }
     }
-    // tidy up end of sentence
-    msg = msg.replace(/,([^,]*)$/, ' and$1');
-    msg += '.';
+    const msg = this.describeScene();
+
+
+    // for (const id of unhosted.get('none')) {
+    //   msg += `${delim}{${id}}`;
+    //   if (hosted.has(id)) {
+    //     msg += ` with `;
+    //     let subDelim = '';
+    //     for (const subId of hosted.get(id)) {
+    //       msg += `${subDelim}{${subId}} ${objs[subId].hosthow} it`;
+    //       subDelim = ' and ';
+    //     }
+    //   }
+    //   delim = ', ';
+    // }
+    // // tidy up end of sentence
+    // msg = msg.replace(/,([^,]*)$/, ' and$1');
+    // msg += '.';
 
     this.tickManager.messageManager.add({
       msg: msg,
       loc: context.loc,
-      objs: objs,
+      objs: this.objs,
       context: context
     });
+  }
+
+  /**
+   * Describe a location usin ids so the client assemles
+   * "You see {Ax} and {Ac} with {je1} beside it and {gl} behind it. Under {Je1} is {dd2}."
+   * @returns {string}
+   */
+  describeScene() {
+    const roots = this.unhosted.get('none');
+    const sentences = [];
+
+    for (const id of roots) {
+      const desc = this.describeObject(id);
+
+      // Turn the recursive description into a readable sentence
+      // e.g. "table with chairs around it" → "You see a table with chairs around it."
+      sentences.push(`You see ${desc}.`);
+    }
+
+    return sentences.join(' ');
+  }
+
+  /**
+   * Returns a sentence combining an object and what it hosts (first draft not ideal)
+   * @param {string} id 
+   * @returns {string}
+   */
+  describeObject(id) {
+    const obj = this.objs[id];
+    const name = obj.longname || `{${id}}`;
+
+    // If nothing is hosted on this object, just return its name.
+    if (!this.hosted.has(id) || this.hosted.get(id).size === 0) {
+      return `{${id}}`;
+    }
+
+    const children = [...this.hosted.get(id)];
+
+    // Group children by how they are hosted
+    const byHow = {};
+    for (const child of children) {
+      const how = this.objs[child].hosthow;
+      if (!byHow[how]) byHow[how] = [];
+      byHow[how].push(child);
+    }
+
+    // Build clauses like:
+    // "with some chairs around it"
+    // "with a plate on it"
+    const clauses = Object.entries(byHow).map(([how, ids]) => {
+      const parts = ids.map(subId => this.describeObject(subId));
+      const joined = parts.join(' and ');
+      return `${joined} ${how} it`;
+    });
+
+    return `{${id}} with ${clauses.join(', ')}`;
   }
 
   /**

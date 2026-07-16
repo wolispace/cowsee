@@ -145,7 +145,7 @@ export class CommandManager extends Queue {
    * Executes a single statement
    */
   executeStatement(statement) {
-    console.log({statement});
+    console.log({ statement });
     const trimmed = statement.trim();
     if (!trimmed) return;
 
@@ -174,12 +174,12 @@ export class CommandManager extends Queue {
     let t = token.trim();
     if ((t.startsWith('"') && t.endsWith('"')) ||
       (t.startsWith("'") && t.endsWith("'"))) {
-        if (t.includes('$')) {
-          t = t.replace(/[$"']/g, '');
-          return this.context[t];
-        } else {
-          return t.replace(/["']/g, '');
-        }
+      if (t.includes('$')) {
+        t = t.replace(/[$"']/g, '');
+        return this.context[t];
+      } else {
+        return t.replace(/["']/g, '');
+      }
     }
     if (!t.startsWith('$')) return t;
 
@@ -310,6 +310,8 @@ export class CommandManager extends Queue {
       }
     },
 
+
+
     // IF/THEN/ELSE handler
     if: (rest) => {
       let match = rest.match(/^(.+?)\s+(equals|is|like|in|eq|ne|>|<|!=|>=|<=|=|==)\s+(.+?)\s+then\s+(.+)$/i);
@@ -417,6 +419,31 @@ export class CommandManager extends Queue {
       this.tickManager.objectManager.savePoolsToDisk();
     },
 
+    clear: (rest) => {
+      const match = rest.match(/^(.+)\s*,\s*(.+)$/i);
+      const objVar = match[1].substring(1); // $target -> target
+      const params = match[2];
+      const objName = this.context[objVar];
+      if (!objName) return;
+
+      const objId = this.tickManager.objectManager.findByNameInLoc(objName, this.context.loc);
+      if (!objId) return;
+      const obj = this.tickManager.objectManager.getById(objId);
+      if (!obj) return;
+
+      // if params == 'xyz' we only clear those
+      delete obj.host;
+      delete obj.hosthow;
+      delete obj.pose;
+
+      // clear the x, y and z and maybe other positional things
+
+      // Save the updated object
+      this.tickManager.objectManager.save(obj);
+      // DEBUG: until we have tick manager handling save to disk.
+      this.tickManager.objectManager.savePoolsToDisk();
+    },
+
     // SAY handler
     say: (rest) => {
       const match = rest.match(/^['"](\w+)['"]\s*,\s*(.+)$/i);
@@ -474,14 +501,15 @@ export class CommandManager extends Queue {
       this.context.new_id = obj.id;
     },
 
-    runsub: (rest) => { 
+    runsub: (rest) => {
       this.runSub(rest);
     },
+
+
 
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
     case: (rest) => { console.log(`case`) },
-    clear: (rest) => { console.log(`clear`) },
     code: (rest) => { console.log(`code`) },
     copy: (rest) => { console.log(`copy`) },
     dedup: (rest) => { console.log(`dedup`) },

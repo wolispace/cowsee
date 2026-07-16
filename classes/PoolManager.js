@@ -1,10 +1,11 @@
-
+import { SetMap } from './SetMap.js';
+import { Utilities } from './Utilities.js';
 // a decay pool that loads from disk as needed and write out at intervals
 // this manages one pool so multiple poolManagers are needed for id, name, loc etc..
 export class PoolManager {
   basename = 'index_'; // the base name of the files being read and written eg index_id_0_1999.json
   key = ''; // keys are called 'id' 'name' etc..
-  pool = new Map(); // pool of currently being interacted with objects
+  pool = new SetMap(); // pool of currently being interacted with objects
   buckets = [];  // buckets (array of arrays of IDs) oldest array gets ID deleted
   currentBucket = 0; // which bucket are we filling now
   dirtyUpdated = new Set(); // all of the modified objects
@@ -19,6 +20,7 @@ export class PoolManager {
    */
   constructor(tickManager, keyName = 'id', decaySteps = 10) {
     this.tickManager = tickManager;
+    this.utils = new Utilities();
     this.keyName = keyName;
     this.basename += this.keyName;
     this.buckets = Array.from({ length: decaySteps }, () => new Set());
@@ -40,13 +42,12 @@ export class PoolManager {
    * 
    */
   get(key) {
-    const cached = this.pool.get(key);
-    if (cached) return cached;
+    if (this.pool.has(key)) return this.pool.get(key);
     console.log(`not cached ${key}`);
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
-    const item = new Set(items?.[key] ?? undefined);
+    const item = new Set(items?.[key] ?? []);
     // Cache it, add it to delay cache bucket, then return it
-    this.pool.set(key, item);
+    this.pool.replace(key, item);
     this.buckets[this.currentBucket].add(key);
     return item;
   }
@@ -60,23 +61,22 @@ export class PoolManager {
    * @param {string} oldKey
    * @param {boolean} override 
    */
-  set(key, thing, oldKey = null, override = false) {
-    if (override) {
+  set(key, thing, oldKey = null) {
+    if (this.utils.isObject(thing)) {
       // 1:1 mapping: replace entirely with a single-element Set
-      this.pool.set(key, new Set([thing]));
+      this.pool.replace(key, new Set([thing]));
     } else {
-      let existing = this.pool.get(key);
-      if (!existing) {
-        existing = new Set();
-        this.pool.set(key, existing);
-      }
-      existing.add(thing);
+      this.pool.add(key, thing);
     }
     this.buckets[this.currentBucket].add(key);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
+    // if loc is empty then flag it as deleted
     if (!oldKey) return;
-    this.delete(oldKey, thing);
+    const isEmpty = this.pool.deleteValue(oldKey, thing);
+    if (isEmpty) {
+      this.dirtyDeleted.add(oldKey);
+    }
   }
 
   /**
@@ -187,7 +187,7 @@ export class PoolManager {
         // refresh pool with this content..
         const item = new Set(json?.[key] ?? undefined);
         // Cache it, add it to decay cache bucket, then return it
-        this.pool.set(key, item);
+        this.pool.replace(key, item);
         this.buckets[this.currentBucket].add(key);
       }
       this.tickManager.fileManager.saveJson(filename, json);

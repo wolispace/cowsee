@@ -85,11 +85,16 @@ console.log('find all pens by name', list);
 const codeText1 = objectManager.getCode(found.id);
 console.log('get the code form found', codeText1);
 
+objectManager.lookLoc(commandManager.context);
+
 commandManager.context = {
   loc: '2',
   actor: 'w',
   rel: 'on', 
 }
+
+objectManager.lookLoc(commandManager.context);
+console.log(tickManager.messageManager.queue);
 
 let variable = `"$rel"`;
 let result = commandManager.resolveValue(variable);

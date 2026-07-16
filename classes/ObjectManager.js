@@ -38,6 +38,7 @@ export class ObjectManager {
    */
   findByName(key) {
     const name = key.replace(/a|an|the/, '').trim();
+    console.log(`findByName ${key}`, this.pools.name);
     return this.pools.name.get(name);
   };
 
@@ -86,6 +87,7 @@ export class ObjectManager {
    */
   getCode(id) {
     const set = this.pools.code.get(id);
+    console.log(`getCode ${id}`, set);
     if (!set || set.size === 0) return '';
     const codeObj = set.values().next().value;
     return codeObj?.code ?? '';
@@ -100,6 +102,7 @@ export class ObjectManager {
    */
   findCommand(firstword, context) {
     const ids = this.findByName(firstword);
+    console.log(`commands = ${firstword}`, ids);
 
     if (!ids || ids.size < 1) return '';
     if (ids.size === 1) {

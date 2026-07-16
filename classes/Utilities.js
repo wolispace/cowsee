@@ -5,14 +5,14 @@ import fs from 'fs';
  */
 export class Utilities {
   logfile = '_server.log';
-  
+
   /**
    * Logs to the server log, and the console, a timestamped line of text
    * @param  {...any} args 
    */
   log(...args) {
     const line = `${new Date().toISOString()} ${args.join(' ')}\n`;
-   // process.stdout.write(line);
+    // process.stdout.write(line);
     fs.appendFileSync(this.logfile, line);
   };
 
@@ -35,4 +35,13 @@ export class Utilities {
   trimQuotes(msg) {
     return msg.substring(1, msg.length - 1);
   }
+
+  isString(v) {
+    return typeof v === "string" || v instanceof String;
+  }
+
+  isObject(v) {
+    return v !== null && typeof v === "object" && !this.isString(v);
+  }
+
 }

@@ -145,7 +145,7 @@ export class CommandManager extends Queue {
    * Executes a single statement
    */
   executeStatement(statement) {
-    // console.log({statement});
+    console.log({statement});
     const trimmed = statement.trim();
     if (!trimmed) return;
 

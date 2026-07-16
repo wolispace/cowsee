@@ -37,7 +37,7 @@ export class ObjectManager {
    * @returns {set} of IDs with this name
    */
   findByName(key) {
-    const name = key.replace(/a|an|the/, '').trim();
+    const name = key.replace(/^(?:the|an|a)\b/i, '').trim();
     return this.pools.name.get(name);
   };
 

@@ -265,8 +265,12 @@ export class CommandManager extends Queue {
         if (match) {
           variablesPart = match[1].trim();
           getLocVar = match[2];
+        } else {
+          variablesPart = rest;
         }
       }
+
+      // need to handle 'get $text;' as 
       const getLocValue = this.context[getLocVar] || '';
       const getSecondLocValue = getSecondLocVar ? this.context[getSecondLocVar] || '' : getLocValue;
       const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
@@ -470,6 +474,9 @@ export class CommandManager extends Queue {
       this.context.new_id = obj.id;
     },
 
+    runsub: (rest) => { 
+      this.runSub(rest);
+    },
 
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
@@ -494,7 +501,6 @@ export class CommandManager extends Queue {
     nudge: (rest) => { console.log(`nudge`) },
     percentbar: (rest) => { console.log(`percentbar`) },
     refresh: (rest) => { console.log(`refresh`) },
-    runsub: (rest) => { console.log(`runsub`) },
     save: (rest) => { console.log(`save`) },
     swap: (rest) => { console.log(`swap`) },
     take: (rest) => { console.log(`take`) },

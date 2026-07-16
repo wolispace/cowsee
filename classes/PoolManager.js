@@ -43,7 +43,6 @@ export class PoolManager {
    */
   get(key) {
     if (this.pool.has(key)) return this.pool.get(key);
-    console.log(`not cached ${key}`);
     const items = this.tickManager.fileManager.loadJson(this.shardName(key));
     const item = new Set(items?.[key] ?? []);
     // Cache it, add it to delay cache bucket, then return it
@@ -118,7 +117,6 @@ export class PoolManager {
    */
   clear() {
     this.pool.clear();
-    console.log(`cleared pool ${this.keyName}`);
   }
 
   /**
@@ -157,8 +155,6 @@ export class PoolManager {
     // Apply changes to each shard file
     for (const [filename, { updated, deleted }] of files) {
       const json = this.tickManager.fileManager.loadJson(filename) ?? {};
-      //console.log(`saving into ${filename}`, json);
-
       // Apply deletions
       for (const key of deleted) {
         delete json[key];

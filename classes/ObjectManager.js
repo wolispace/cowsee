@@ -214,7 +214,7 @@ export class ObjectManager {
    * Generate a msg of all obj ids in the loc and adds it to the msg queue
    * @param {object} context 
    */
-  lookLoc(context) {
+  lookLoc0(context) {
     const ids = this.findInLoc(context.loc);
     let delim = '';
     this.hosted = new SetMap();
@@ -396,4 +396,373 @@ export class ObjectManager {
     }
   }
 
+  /**
+   * New lookLoc2 method that structures descriptions dynamically and recursively
+   * with limits on sentence group size and rotating templates.
+   * @param {object} context 
+   * @returns {object}
+   */
+  lookLoc(context) {
+    const ids = this.findInLoc(context.loc);
+    const objs = {};
+    for (const id of ids) {
+      const originalObj = this.getById(id);
+      if (originalObj) {
+        const obj = { ...originalObj };
+        objs[id] = obj;
+        this.formatObject(objs[id]);
+      }
+    }
+
+    // Determine hidden status recursively (if an object or its host/ancestor is hidden, it's hidden)
+    const isHidden = (id) => {
+      const obj = objs[id];
+      if (!obj) return true;
+      if (obj.pose && obj.pose.trim() === 'hidden') return true;
+      if (obj.host) {
+        return isHidden(obj.host);
+      }
+      return false;
+    };
+
+    const activeIds = [];
+    const activeObjs = {};
+    for (const id of ids) {
+      if (!isHidden(id)) {
+        activeIds.push(id);
+        activeObjs[id] = objs[id];
+      }
+    }
+
+    const unhosted = [];
+    const hostedGroups = new Map(); // hostId -> Map(hosthow -> Array of childId)
+
+    for (const id of activeIds) {
+      const obj = activeObjs[id];
+      if (!obj.host || !activeObjs[obj.host]) {
+        unhosted.push(id);
+      } else {
+        const hostId = obj.host;
+        const hosthow = (obj.hosthow || 'on').trim();
+        if (!hostedGroups.has(hostId)) {
+          hostedGroups.set(hostId, new Map());
+        }
+        const hosthowMap = hostedGroups.get(hostId);
+        if (!hosthowMap.has(hosthow)) {
+          hosthowMap.set(hosthow, []);
+        }
+        hosthowMap.get(hosthow).push(id);
+      }
+    }
+
+    const seenObjects = new Set();
+    const queue = [];
+
+    const describeObject2 = (objId, allowWith) => {
+      seenObjects.add(objId);
+      const obj = activeObjs[objId];
+      if (!obj) return `{${objId}}`;
+
+      let desc = `{${objId}}`;
+
+      if (hostedGroups.has(objId) && allowWith) {
+        const hosthowMap = hostedGroups.get(objId);
+        if (hosthowMap.size === 1) {
+          const [hosthow, children] = hosthowMap.entries().next().value;
+          if (children.length === 1) {
+            const childId = children[0];
+            if (!seenObjects.has(childId)) {
+              const childObj = activeObjs[childId];
+              const childPose = childObj.pose ? childObj.pose.trim() : '';
+              if (hostedGroups.has(childId) && !queue.includes(childId)) {
+                queue.push(childId);
+              }
+              const childDesc = describeObject2(childId, false);
+              const poseStr = childPose ? ` ${childPose}` : '';
+              const gender = obj.gender || (obj.qty > 1 ? 'them' : 'it');
+              desc += ` with ${childDesc}${poseStr} ${hosthow} ${gender}`;
+            }
+          }
+        }
+      }
+
+      if (hostedGroups.has(objId) && !queue.includes(objId)) {
+        queue.push(objId);
+      }
+
+      return desc;
+    };
+
+    const sentences = [];
+    let sentenceIndex = 0;
+    let lastHost = null;
+    let lastHosthow = null;
+
+    const capitalizeFirst = (str) => {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
+    // Process unhosted
+    const posedUnhosted = [];
+    const unposedUnhosted = [];
+    for (const id of unhosted) {
+      const obj = activeObjs[id];
+      const pose = obj.pose ? obj.pose.trim() : '';
+      if (pose) {
+        posedUnhosted.push(id);
+      } else {
+        unposedUnhosted.push(id);
+      }
+    }
+
+    for (const id of posedUnhosted) {
+      if (seenObjects.has(id)) continue;
+      const obj = activeObjs[id];
+      const pose = obj.pose ? obj.pose.trim() : '';
+      const also = (lastHost === 'unhosted' && lastHosthow === null);
+      const is_are = (obj.qty > 1 || obj.is === 'are') ? 'are' : 'is';
+      const template = UNHOSTED_TEMPLATES[sentenceIndex % UNHOSTED_TEMPLATES.length];
+      sentenceIndex++;
+
+      const objDesc = describeObject2(id, true);
+      const objsText = `${objDesc} ${pose}`;
+      const rendered = template.render({
+        objs: objsText,
+        also: also,
+        is_are: is_are
+      });
+
+      sentences.push(capitalizeFirst(rendered));
+      lastHost = 'unhosted';
+      lastHosthow = null;
+    }
+
+    const maxItems = 3;
+    for (let i = 0; i < unposedUnhosted.length; i += maxItems) {
+      const chunk = unposedUnhosted.slice(i, i + maxItems).filter(id => !seenObjects.has(id));
+      if (chunk.length === 0) continue;
+
+      const also = (lastHost === 'unhosted' && lastHosthow === null);
+      let chunkPlural = chunk.length > 1;
+      for (const id of chunk) {
+        const obj = activeObjs[id];
+        if (obj.qty > 1 || obj.is === 'are') {
+          chunkPlural = true;
+        }
+      }
+      const is_are = chunkPlural ? 'are' : 'is';
+
+      const template = UNHOSTED_TEMPLATES[sentenceIndex % UNHOSTED_TEMPLATES.length];
+      sentenceIndex++;
+
+      const formattedParts = chunk.map(id => describeObject2(id, true));
+      const objsText = formatObjectList2(formattedParts);
+
+      const rendered = template.render({
+        objs: objsText,
+        also: also,
+        is_are: is_are
+      });
+
+      sentences.push(capitalizeFirst(rendered));
+      lastHost = 'unhosted';
+      lastHosthow = null;
+    }
+
+    // Process queue
+    while (queue.length > 0) {
+      const hostId = queue.shift();
+      const hostObj = activeObjs[hostId];
+      if (!hostObj) continue;
+
+      if (hostedGroups.has(hostId)) {
+        const hosthowMap = hostedGroups.get(hostId);
+        for (const [hosthow, children] of hosthowMap.entries()) {
+          const unseenChildren = children.filter(id => !seenObjects.has(id));
+          if (unseenChildren.length === 0) continue;
+
+          const posedChildren = [];
+          const unposedChildren = [];
+          for (const id of unseenChildren) {
+            const childObj = activeObjs[id];
+            const pose = childObj.pose ? childObj.pose.trim() : '';
+            if (pose) {
+              posedChildren.push(id);
+            } else {
+              unposedChildren.push(id);
+            }
+          }
+
+          for (const id of posedChildren) {
+            if (seenObjects.has(id)) continue;
+            const childObj = activeObjs[id];
+            const pose = childObj.pose ? childObj.pose.trim() : '';
+
+            const template = HOSTED_TEMPLATES[sentenceIndex % HOSTED_TEMPLATES.length];
+            sentenceIndex++;
+
+            const also = (lastHost === hostId && lastHosthow === hosthow);
+            const objIs = (childObj.qty > 1 || childObj.is === 'are') ? 'are' : 'is';
+            const hostIs = (hostObj.qty > 1 || hostObj.is === 'are') ? 'are' : 'is';
+            const hostGender = hostObj.gender || (hostObj.qty > 1 ? 'them' : 'it');
+
+            const childDesc = describeObject2(id, !template.usesWith);
+
+            const rendered = template.render({
+              host: `{${hostId}}`,
+              hostIs: hostIs,
+              hostGender: hostGender,
+              obj: childDesc,
+              objIs: objIs,
+              pose: pose,
+              hosthow: hosthow,
+              also: also
+            });
+
+            sentences.push(capitalizeFirst(rendered));
+            lastHost = hostId;
+            lastHosthow = hosthow;
+          }
+
+          for (let i = 0; i < unposedChildren.length; i += maxItems) {
+            const chunk = unposedChildren.slice(i, i + maxItems).filter(id => !seenObjects.has(id));
+            if (chunk.length === 0) continue;
+
+            const template = HOSTED_TEMPLATES[sentenceIndex % HOSTED_TEMPLATES.length];
+            sentenceIndex++;
+
+            const also = (lastHost === hostId && lastHosthow === hosthow);
+            let chunkPlural = chunk.length > 1;
+            for (const id of chunk) {
+              const childObj = activeObjs[id];
+              if (childObj.qty > 1 || childObj.is === 'are') {
+                chunkPlural = true;
+              }
+            }
+            const objIs = chunkPlural ? 'are' : 'is';
+            const hostIs = (hostObj.qty > 1 || hostObj.is === 'are') ? 'are' : 'is';
+            const hostGender = hostObj.gender || (hostObj.qty > 1 ? 'them' : 'it');
+
+            const formattedParts = chunk.map(id => describeObject2(id, !template.usesWith));
+            const objText = formatObjectList2(formattedParts);
+
+            const rendered = template.render({
+              host: `{${hostId}}`,
+              hostIs: hostIs,
+              hostGender: hostGender,
+              obj: objText,
+              objIs: objIs,
+              pose: '',
+              hosthow: hosthow,
+              also: also
+            });
+
+            sentences.push(capitalizeFirst(rendered));
+            lastHost = hostId;
+            lastHosthow = hosthow;
+          }
+        }
+      }
+    }
+
+    const data = {
+      msg: sentences.join(' '),
+      loc: context.loc,
+      objs: activeObjs,
+      context: context
+    };
+
+    this.tickManager.messageManager.add(data);
+
+    return data;
+  }
+
 };
+
+const UNHOSTED_TEMPLATES = [
+  {
+    name: 'see',
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      return `You${alsoStr} see ${ctx.objs}.`;
+    }
+  },
+  {
+    name: 'there-is',
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      return `There ${ctx.is_are}${alsoStr} ${ctx.objs}.`;
+    }
+  },
+  {
+    name: 'notice',
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      return `Looking around you${alsoStr} notice ${ctx.objs}.`;
+    }
+  }
+];
+
+const HOSTED_TEMPLATES = [
+  {
+    name: 'host-first-see',
+    usesWith: true,
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      const poseStr = ctx.pose ? ` ${ctx.pose}` : '';
+      return `You${alsoStr} see ${ctx.host} with ${ctx.obj}${poseStr} ${ctx.hosthow} ${ctx.hostGender}.`;
+    }
+  },
+  {
+    name: 'host-first-there',
+    usesWith: true,
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      const poseStr = ctx.pose ? ` ${ctx.pose}` : '';
+      return `There ${ctx.hostIs}${alsoStr} ${ctx.host} with ${ctx.obj}${poseStr} ${ctx.hosthow} ${ctx.hostGender}.`;
+    }
+  },
+  {
+    name: 'obj-first',
+    usesWith: false,
+    render: (ctx) => {
+      const parts = [];
+      if (ctx.also) {
+        parts.push('also');
+      }
+      if (ctx.pose) {
+        parts.push(ctx.pose);
+      }
+      parts.push(ctx.hosthow);
+      parts.push(ctx.host);
+      parts.push(ctx.objIs);
+      parts.push(ctx.obj);
+      return parts.join(' ') + '.';
+    }
+  },
+  {
+    name: 'positional-there',
+    usesWith: false,
+    render: (ctx) => {
+      const alsoStr = ctx.also ? 'also ' : '';
+      return `${alsoStr}${ctx.hosthow} ${ctx.host} there ${ctx.objIs} ${ctx.obj}.`;
+    }
+  },
+  {
+    name: 'positional-obj-first',
+    usesWith: false,
+    render: (ctx) => {
+      const alsoStr = ctx.also ? ' also' : '';
+      const poseStr = ctx.pose ? ` ${ctx.pose}` : '';
+      return `There ${ctx.objIs}${alsoStr} ${ctx.obj}${poseStr} ${ctx.hosthow} ${ctx.host}.`;
+    }
+  }
+];
+
+function formatObjectList2(ids) {
+  if (!ids || ids.length === 0) return '';
+  if (ids.length === 1) return ids[0];
+  if (ids.length === 2) return `${ids[0]} and ${ids[1]}`;
+  return `${ids.slice(0, -1).join(', ')} and ${ids[ids.length - 1]}`;
+}

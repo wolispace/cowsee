@@ -62,17 +62,17 @@ function runTests() {
   addObj({ id: 'I', class: 'cat', host: 'B', hosthow: 'under', pose: 'sleeping' });
 
   // 4. Hidden objects: box (J) hidden, key (K) sleeping under J
-  addObj({ id: 'J', class: 'box', host: 'B', hosthow: 'on', pose: 'hidden' });
+  addObj({ id: 'J', class: 'fish', host: 'B', hosthow: 'on', pose: 'hidden' });
   addObj({ id: 'K', class: 'key', host: 'J', hosthow: 'under', pose: 'sleeping' });
 
   // 5. Plural/gender test: mice (L) qty 6 around table (B)
   addObj({ id: 'L', class: 'mouse', qty: 6, host: 'B', hosthow: 'around', pose: 'dancing', gender: 'them' });
 
-  console.log('--- Running lookLoc0() on Complex Scenario ---');
-  const res1 = objectManager.lookLoc0(context);
+  console.log('--- Running lookLoc() on Complex Scenario 001 ---');
+  const res1 = objectManager.lookLoc(context);
   console.log(res1.msg);
 
-  console.log('\n--- Running lookLoc() on Complex Scenario ---');
+  console.log('\n--- Running lookLoc() on Complex Scenario 002 ---');
   const res2 = objectManager.lookLoc(context);
   console.log(res2.msg);
 }

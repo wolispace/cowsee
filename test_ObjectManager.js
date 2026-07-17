@@ -12,7 +12,7 @@ const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max =5;
+const max = 50; // so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 
@@ -93,9 +93,6 @@ commandManager.context = {
   rel: 'on', 
 }
 
-objectManager.lookLoc(commandManager.context);
-console.log(tickManager.messageManager.queue);
-
 let variable = `"$rel"`;
 let result = commandManager.resolveValue(variable);
 console.log(`::: ${variable} = '${result}'`);
@@ -169,7 +166,7 @@ function initCommands() {
 
   for (const obj of commands) {
     obj.id = objectManager.idManager.new();
-    obj.loc = '2';
+    obj.loc = '3';
     obj.class = 'command',
     obj.color = randomColour(),
     objectManager.addToPools(obj);

@@ -54,8 +54,7 @@ export class FileManager {
   loadJson(filename) {
    const filepath = `${this.datapath}${filename}.json`;
    if (!fs.existsSync(filepath)) return {};
-   console.log(`loadJson ${filepath}`);
-  
+   //console.log(`loadJson ${filepath}`);
     return JSON.parse(fs.readFileSync(filepath, `utf8`));
   }
 
@@ -66,7 +65,7 @@ export class FileManager {
    */
   saveJson(filename, json) {
     const filepath = `${this.datapath}${filename}.json`;
-    console.log(`saveJson ${filepath}`);
+    // console.log(`saveJson ${filepath}`);
     fs.writeFileSync(filepath, JSON.stringify(json, null, 2), `utf8`);
   }
 

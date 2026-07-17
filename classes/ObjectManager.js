@@ -231,14 +231,17 @@ export class ObjectManager {
         this.unhosted.add('none', obj.id);
       }
     }
-    const msg = this.describeScene();
 
-    this.tickManager.messageManager.add({
-      msg: msg,
+    const data = {
+      msg: this.describeScene(),
       loc: context.loc,
       objs: this.objs,
       context: context
-    });
+    };
+
+    this.tickManager.messageManager.add(data);
+
+    return data;
   }
 
   /**

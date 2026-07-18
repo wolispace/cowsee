@@ -31,7 +31,11 @@ function appendInfo(text) {
 
           // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
           if (prop === 'longname' && json.context && id === thisPlayer) {
-              val = `${val} (you)`;
+              val = `${obj.name} (you)`;
+          }
+
+          if (!['longname', 'name', 'shorname'].includes(prop)) {
+            return val;
           }
 
           // Format value with styling if colour is defined

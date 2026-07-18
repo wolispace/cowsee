@@ -33,21 +33,11 @@ export class LookManager {
       this.sentences.push('Nothing interesting here');
       return returnData();
     }
-
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
-
-    console.log(this.hosted);
-
     const unhosted = this.hosted['_']['_'];
-
     this.recursiveLook(unhosted);
-
     this.buildSentences();
-
-    console.log(this.groups);
-    console.log(this.sentences);
-
     return this.returnData();
 
   }
@@ -117,18 +107,34 @@ SetMap {
   */
   buildSentences() {
     this.sentences = [];
+    let sentenceCount = 0;
+    let lastHost = '';
     for (const [key, ids] of this.groups.map) {
-      let sentence = 'You {also} see ';
+      const firstId = ids.values().next().value;
+      const obj = this.objs[firstId];
+      const host = obj?.host;
+      let showHost = 'You also see';
+      if (host) {
+        if (lastHost == host) {
+          showHost = `Also {${host}.hosthow} the {${host}.class} there is`;
+        } else {
+          showHost = `{${host}.hosthow} the {${host}.class} there is`;
+        }
+      }
+      let sentence = sentenceCount++ < 1 ? 'You see' : showHost;
       let delim = ' ';
       let objCounter = 1;
       for (const id of ids) {
-        delim = (objCounter++ >= ids.size) ? ' and ' : delim;
-        sentence += `${delim}{${id}}`;
+        delim = (ids.size > 1 && objCounter++ >= ids.size) ? ' and ' : delim;
+
+        sentence += `${delim}{${id}.pose} {${id}}`;
         delim = ', ';
       }
-      sentence = this.utils.sentenceCase(sentence);
+      sentence = this.utils.sentenceCase(sentence.trim());
       this.sentences.push(sentence);
+      lastHost = host;
     }
+    console.log(this.sentences);
   }
 
 

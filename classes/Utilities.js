@@ -80,4 +80,9 @@ export class Utilities {
     }
     return data.msg;
   }
+
+  sentenceCase(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 }
+

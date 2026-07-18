@@ -1,4 +1,5 @@
 import { SetMap } from './SetMap.js';
+import { Utilities } from './Utilities.js';
 
 export class LookManager {
   seen = [];
@@ -14,6 +15,7 @@ export class LookManager {
   constructor(tickManager) {
     this.tickManager = tickManager;
     this.objectManager = this.tickManager.objectManager;
+    this.utils = new Utilities();
   }
 
   incrementCount() {
@@ -114,13 +116,17 @@ SetMap {
 }
   */
   buildSentences() {
-    console.log(this.groups);
+    this.sentences = [];
     for (const [key, ids] of this.groups.map) {
-      console.log(`build sentences`, key, ids);
-      let sentence = '';
+      let sentence = 'You {also} see ';
+      let delim = ' ';
+      let objCounter = 1;
       for (const id of ids) {
-        sentence += `{${id}}, `;
+        delim = (objCounter++ >= ids.size) ? ' and ' : delim;
+        sentence += `${delim}{${id}}`;
+        delim = ', ';
       }
+      sentence = this.utils.sentenceCase(sentence);
       this.sentences.push(sentence);
     }
   }
@@ -128,7 +134,7 @@ SetMap {
 
   returnData() {
     return {
-      msg: this.sentences.join(' '),
+      msg: this.sentences.join('. '),
       loc: this.context.loc,
       objs: this.objs,
       context: this.context

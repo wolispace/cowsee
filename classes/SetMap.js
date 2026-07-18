@@ -36,6 +36,11 @@ export class SetMap {
     return set ? set.has(value) : false;
   }
 
+  sort() {
+    this.map = new Map([... this.map.entries()].sort(([a], [b]) =>
+      a.localeCompare(b)));
+  }
+
   deleteKey(key) {
     this.map.delete(key);
   }

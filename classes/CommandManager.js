@@ -461,7 +461,8 @@ export class CommandManager extends Queue {
 
     relook: (rest) => {
       this.context.loc = this.resolveValue(rest.trim());
-      this.tickManager.objectManager.lookLoc(this.context);
+      const data = this.tickManager.objectManager.lookLoc(this.context);
+      this.tickManager.messageManager.add(data);
       // // TODO: this "force" should queue up a new command from the 'actor' to 'look'
       // this.tickManager.messageManager.add({
 

@@ -403,6 +403,12 @@ export class ObjectManager {
    * @returns {object}
    */
   lookLoc(context) {
+    const data = this.tickManager.lookManager.look(context);
+    // messageManager.add(data);
+    return data;
+  }
+
+  lookLoc3(context) {
     const ids = this.findInLoc(context.loc);
     const objs = {};
     for (const id of ids) {

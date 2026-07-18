@@ -1,6 +1,7 @@
 import { MessageManager } from './MessageManager.js';
 import { CommandManager } from './CommandManager.js';
 import { ObjectManager } from './ObjectManager.js';
+import { LookManager } from './LookManager.js';
 import { FileManager } from './FileManager.js';
 
 
@@ -11,6 +12,7 @@ export class TickManager {
     this.messageManager = new MessageManager(this);
     this.fileManager = new FileManager(this);
     this.objectManager = new ObjectManager(this);
+    this.lookManager = new LookManager(this);
     
     if (testing) return;
     setInterval(() => this.doNext(), this.interval);

@@ -35,6 +35,7 @@ export class LookManager {
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
+    console.log(this.hosted);
     const unhosted = this.hosted['_']['_'];
     this.recursiveLook(unhosted);
     this.buildSentences();
@@ -59,16 +60,19 @@ export class LookManager {
     for (const [id, obj] of Object.entries(this.objs)) {
       const key = obj.host ?? '_';
       const sub = obj.hosthow ?? '_';
+      const pose = obj.pose ?? '_';
       if (!hosted[key]) hosted[key] = {};
-      if (!hosted[key][sub]) hosted[key][sub] = [];
-      hosted[key][sub].push(id);
+      if (!hosted[key][sub]) hosted[key][sub] = {};
+      if (!hosted[key][sub][pose]) hosted[key][sub][pose] = [];
+
+      hosted[key][sub][pose].push(id);
     }
     return hosted;
   }
 
 
   /*
-  {
+const old = {
   _: { _: [ '1', '3', 'Z', 'w', 'A', 'H' ] },
   A: { on: [ 'B' ] },
   B: { on: [ 'C', 'F', 'G' ], under: [ 'I' ], around: [ 'L' ] },
@@ -76,21 +80,41 @@ export class LookManager {
   D: { on: [ 'E' ] },
   J: { under: [ 'K' ] }
 }
+
+const new = {
+  _: { _: { _: ['1'], flying: ['H'] } },
+  A: { on: { _: ['B'] } },
+  B: {
+    on: { _: ['C', 'F', 'G'] },
+    under: { sleeping: ['I'] },
+    around: { dancing: [ 'L'] }
+  },
+  C: { on: { _: [ 'D' ] } },
+  D: { on: { _: ['E'] } },
+  J: { under: { sleeping: ['K'] } }
+}
   */
 
-  recursiveLook(ids) {
+recursiveLook(poses) {
+  for (const ids of Object.values(poses)) {
     for (const id of ids) {
       if (this.seen.has(id)) continue;
+
       this.groups.set(this.sentenceCounter, id);
       this.seen.add(id);
       this.incrementCount();
-      if (!this.hosted[id]) continue;
-      for (const [hosthow, hostedIds] of Object.entries(this.hosted[id])) {
-        this.recursiveLook(hostedIds);
+
+      const hosted = this.hosted[id];
+      if (!hosted) continue;
+      for (const posesOfHosthow of Object.values(hosted)) {
+        // posesOfHosthow is again an object of poses
+        this.recursiveLook(posesOfHosthow);
         this.incrementCount();
       }
     }
   }
+}
+
 
   /*
 SetMap {

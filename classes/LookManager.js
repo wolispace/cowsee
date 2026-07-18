@@ -35,9 +35,9 @@ export class LookManager {
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
-    console.log(this.hosted);
     const unhosted = this.hosted['_']['_'];
     this.recursiveLook(unhosted);
+    console.log(this.groups);
     this.buildSentences();
     return this.returnData();
 
@@ -72,15 +72,6 @@ export class LookManager {
 
 
   /*
-const old = {
-  _: { _: [ '1', '3', 'Z', 'w', 'A', 'H' ] },
-  A: { on: [ 'B' ] },
-  B: { on: [ 'C', 'F', 'G' ], under: [ 'I' ], around: [ 'L' ] },
-  C: { on: [ 'D' ] },
-  D: { on: [ 'E' ] },
-  J: { under: [ 'K' ] }
-}
-
 const new = {
   _: { _: { _: ['1'], flying: ['H'] } },
   A: { on: { _: ['B'] } },
@@ -95,26 +86,33 @@ const new = {
 }
   */
 
-recursiveLook(poses) {
-  for (const ids of Object.values(poses)) {
-    for (const id of ids) {
-      if (this.seen.has(id)) continue;
 
-      this.groups.set(this.sentenceCounter, id);
-      this.seen.add(id);
-      this.incrementCount();
+recursiveLook(hosthows) {
+  // hosthows is always an object:
+  // { on: { _: [...], flying: [...] }, under: {...}, ... }
 
-      const hosted = this.hosted[id];
-      if (!hosted) continue;
-      for (const posesOfHosthow of Object.values(hosted)) {
-        // posesOfHosthow is again an object of poses
-        this.recursiveLook(posesOfHosthow);
+  for (const poses of Object.values(hosthows)) {
+    // poses is an object of pose → ids[]
+    // { _: ['1'], flying: ['H'] }
+
+    for (const [pose, ids] of Object.entries(poses)) {
+      for (const id of ids) {
+        if (this.seen.has(id)) continue;
+
+        this.groups.set(this.sentenceCounter, id);
+        this.seen.add(id);
+        this.incrementCount();
+
+        const hosted = this.hosted[id];
+        if (!hosted) continue;
+
+        // hosted[id] is again hosthows
+        this.recursiveLook(hosted);
         this.incrementCount();
       }
     }
   }
 }
-
 
   /*
 SetMap {
@@ -134,15 +132,15 @@ SetMap {
     let sentenceCount = 0;
     let lastHost = '';
     for (const [key, ids] of this.groups.map) {
-      const firstId = ids.values().next().value;
+      const firstId = ids.values().next().value; // read first from a Set
       const obj = this.objs[firstId];
       const host = obj?.host;
       let showHost = 'You also see';
       if (host) {
         if (lastHost == host) {
-          showHost = `Also {${host}.hosthow} the {${host}.class} there is`;
+          showHost = `Also {${obj.id}.hosthow} the {${host}.class} there is`;
         } else {
-          showHost = `{${host}.hosthow} the {${host}.class} there is`;
+          showHost = `{${obj.id}.hosthow} the {${host}.class} there is`;
         }
       }
       let sentence = sentenceCount++ < 1 ? 'You see' : showHost;

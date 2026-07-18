@@ -57,7 +57,7 @@ export class Utilities {
 
         // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
         if (prop === 'longname' && data.context && id === data.context.player) {
-          val = `${val} (you)`;
+          val = `${obj.name} (you)`;
         }
         if (paintext) {
           return val;

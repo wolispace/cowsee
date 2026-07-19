@@ -136,9 +136,9 @@ SetMap {
       let showHost = 'You also see';
       if (host) {
         if (lastHost == host) {
-          showHost = `Also {${obj.id}.hosthow} the {${host}.class} there is`;
+          showHost = `Also {${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
         } else {
-          showHost = `{${obj.id}.hosthow} the {${host}.class} there is`;
+          showHost = `{${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
         }
       }
       let sentence = sentenceCount++ < 1 ? 'You see' : showHost;
@@ -150,7 +150,6 @@ SetMap {
         sentence += `${delim}{${id}.pose} {${id}}`;
         delim = ', ';
       }
-      sentence = this.utils.sentenceCase(sentence.trim());
       this.sentences.push(sentence);
       lastHost = host;
     }

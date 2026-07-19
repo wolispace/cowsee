@@ -77,10 +77,15 @@ export class Utilities {
 
       data.msg = data.msg.replace(/\s+/g, ' ').trim();
     }
-    return data.msg;
+    
+    return this.capitalEachSentence(data.msg);
   }
 
-  sentenceCase(str) {
+  capitalEachSentence(text) {
+    return text.replace(/\.\s*([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
+  }
+
+  sentenceCaseString(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }

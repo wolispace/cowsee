@@ -35,9 +35,10 @@ export class LookManager {
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
-    const unhosted = this.hosted['_']['_'];
+    console.dir(this.hosted, { depth: null, colors: true });
+    const unhosted = this.hosted['_'];
     this.recursiveLook(unhosted);
-    console.log(this.groups);
+    console.dir(this.groups, { depth: null, colors: true });
     this.buildSentences();
     return this.returnData();
 
@@ -87,32 +88,29 @@ const new = {
   */
 
 
-recursiveLook(hosthows) {
-  // hosthows is always an object:
-  // { on: { _: [...], flying: [...] }, under: {...}, ... }
-
-  for (const poses of Object.values(hosthows)) {
-    // poses is an object of pose → ids[]
-    // { _: ['1'], flying: ['H'] }
-
-    for (const [pose, ids] of Object.entries(poses)) {
-      for (const id of ids) {
-        if (this.seen.has(id)) continue;
-
-        this.groups.set(this.sentenceCounter, id);
-        this.seen.add(id);
-        this.incrementCount();
-
-        const hosted = this.hosted[id];
-        if (!hosted) continue;
-
-        // hosted[id] is again hosthows
-        this.recursiveLook(hosted);
-        this.incrementCount();
+  recursiveLook(hosthows) {
+    // hosthows is always an object:
+    // { on: { _: [...], flying: [...] }, under: {...}, ... }
+    for (const [hosthow, poses] of Object.entries(hosthows)) {
+      // poses is an object of pose → ids[]
+      // { _: ['1'], flying: ['H'] }
+      for (const [pose, ids] of Object.entries(poses)) {
+        for (const id of ids) {
+          if (this.seen.has(id)) continue;
+          this.groups.set(this.sentenceCounter, id);
+          this.seen.add(id);
+          const hosted = this.hosted[id];
+          if (!hosted) continue;
+          this.sentenceCounter++;
+          // hosted[id] is again hosthows
+          this.recursiveLook(hosted);
+          // this.incrementCount();
+        }
+        this.sentenceCounter++;
       }
+      this.sentenceCounter++;
     }
   }
-}
 
   /*
 SetMap {
@@ -156,7 +154,7 @@ SetMap {
       this.sentences.push(sentence);
       lastHost = host;
     }
-    console.log(this.sentences);
+    //console.log(this.sentences);
   }
 
 
@@ -168,5 +166,5 @@ SetMap {
       context: this.context
     };
   }
-  
+
 };

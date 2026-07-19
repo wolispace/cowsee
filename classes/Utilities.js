@@ -45,7 +45,6 @@ export class Utilities {
   }
 
   interpolate(data, paintext = false) {
-    console.log(data);
     if (data.msg) {
       // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
       data.msg = data.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {

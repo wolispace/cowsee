@@ -407,6 +407,5 @@ export class ObjectManager {
     // messageManager.add(data);
     return data;
   }
-  
 };
 

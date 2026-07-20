@@ -35,10 +35,10 @@ export class LookManager {
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
-    console.dir(this.hosted, { depth: null, colors: true });
+    // console.dir(this.hosted, { depth: null, colors: true });
     const unhosted = this.hosted['_'];
     this.recursiveLook(unhosted);
-    console.dir(this.groups, { depth: null, colors: true });
+    // console.dir(this.groups, { depth: null, colors: true });
     this.buildSentences();
     return this.returnData();
 
@@ -147,7 +147,10 @@ SetMap {
       for (const id of ids) {
         delim = (ids.size > 1 && objCounter++ >= ids.size) ? ' and ' : delim;
 
-        sentence += `${delim}{${id}.pose} {${id}}`;
+        let descObj = `{${id}.pose} {${id}}`;
+        descObj = `{${id}.qtyText} {${id}.pose} {${id}.plural}`;
+
+        sentence += `${delim}${descObj}`;
         delim = ', ';
       }
       this.sentences.push(sentence);

@@ -34,7 +34,7 @@ function appendInfo(text) {
               val = `${obj.name} (you)`;
           }
 
-          if (!['longname', 'name', 'shorname'].includes(prop)) {
+          if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
             return val;
           }
 
@@ -54,7 +54,7 @@ function appendInfo(text) {
       json.msg = json.msg.replace(/\s+/g, ' ').trim();
   }
   if (json.msg) {
-    div.innerHTML = json.msg;
+    div.innerHTML = capitalEachSentence(json.msg);
     info.appendChild(div);
   }
 }
@@ -85,3 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+function capitalEachSentence(text) {
+  return text.replace(/\.\s*([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
+}

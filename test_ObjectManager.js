@@ -12,7 +12,7 @@ const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 50; // so we dont stomp over the commands with test records
+const max = 10; // so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 
@@ -54,7 +54,6 @@ found.class = 'box';
 found.loc = '2';
 found.colour = 'pink',
 found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
-`say 'think',"[$actor] . o 0 ( $text )"`
 objectManager.addToPools(found);
 
 found = objectManager.getById('3');
@@ -62,8 +61,7 @@ console.log('found', found);
 found.class = 'cat';
 found.loc = '2';
 found.colour = 'seagreen',
-found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks . o O ( $cmd_text )";`;
-`say 'think',"[$actor] . o 0 ( $text )"`
+found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 objectManager.addToPools(found);
 
 // add the wolis player id 'w'
@@ -85,7 +83,8 @@ console.log('find all pens by name', list);
 const codeText1 = objectManager.getCode(found.id);
 console.log('get the code form found', codeText1);
 
-objectManager.lookLoc(commandManager.context);
+const testData = objectManager.lookLoc(commandManager.context);
+console.log(testData);
 
 commandManager.context = {
   loc: '2',
@@ -108,8 +107,8 @@ console.log('found again', found);
 found.info = 'This is a brilliant cat';
 found.pocket = '6',
 found.colour = 'tomato',
-found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks . o O ( $cmd_text )";`;
-`say 'think',"[$actor] . o 0 ( $text )"`
+found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
+`say 'think',"[$actor] .oO( $text )"`
 objectManager.addToPools(found);
 
 objectManager.savePoolsToDisk();
@@ -139,7 +138,7 @@ function initCommands() {
     code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
   },{
     name: "think",
-    code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] . o 0 ( $text )\";\n##ponder:\nsay 'think',\"[$actor] . o 0 ( I keep thinking its Tuesday )\"`
+    code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] .oO( $text )\";\n##ponder:\nsay 'think',\"[$actor] .o0( I keep thinking its Tuesday )\"`
   },{
     name: "do",
     code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`

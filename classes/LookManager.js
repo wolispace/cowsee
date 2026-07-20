@@ -18,15 +18,7 @@ export class LookManager {
     this.utils = new Utilities();
   }
 
-  incrementCount() {
-    if (this.objCounter++ >= this.maxPerGroup) {
-      this.sentenceCounter++;
-      this.objCounter = 0;
-    }
-
-  }
-
-    /**
+  /**
    * Returns an object for adding to the msg queue with a list of all obj
    * @param {object} context 
    */
@@ -35,9 +27,9 @@ export class LookManager {
     this.found = this.objectManager.findInLoc(this.context.loc);
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
-      return returnData();
+      return this.returnData();
     }
-    
+
     this.objs = this.populateObjs();
     let list = '';
     for (const id of this.objs) {
@@ -47,12 +39,16 @@ export class LookManager {
     return this.returnData();
   }
 
+  /**
+   * Returns an object for adding to the msg queue with a paragraph of all obj
+   * @param {object} context 
+   */
   look(context) {
     this.context = context;
     this.found = this.objectManager.findInLoc(this.context.loc);
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
-      return returnData();
+      return this.returnData();
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
@@ -62,11 +58,13 @@ export class LookManager {
     // console.dir(this.groups, { depth: null, colors: true });
     this.buildSentences();
     return this.returnData();
-
   }
 
+  /**
+   * Returns a list of all visible objects 
+   * @returns {object}
+   */
   populateObjs() {
-    // build a list of all visible objects
     const objs = {};
     for (const id of this.found) {
       const obj = this.objectManager.getById(id);
@@ -77,6 +75,10 @@ export class LookManager {
     return objs;
   }
 
+  /**
+   * Returns an object grouped by hosting, hosthow and pose so sentences can be structued by these
+   * @returns {object}
+   */
   buildHosted() {
     const hosted = {};
     for (const [id, obj] of Object.entries(this.objs)) {
@@ -92,23 +94,10 @@ export class LookManager {
     return hosted;
   }
 
-
-  /*
-const new = {
-  _: { _: { _: ['1'], flying: ['H'] } },
-  A: { on: { _: ['B'] } },
-  B: {
-    on: { _: ['C', 'F', 'G'] },
-    under: { sleeping: ['I'] },
-    around: { dancing: [ 'L'] }
-  },
-  C: { on: { _: [ 'D' ] } },
-  D: { on: { _: ['E'] } },
-  J: { under: { sleeping: ['K'] } }
-}
-  */
-
-
+  /**
+   * Puts all objects into groups for formatting into setences
+   * @param {*} hosthows 
+   */
   recursiveLook(hosthows) {
     // hosthows is always an object:
     // { on: { _: [...], flying: [...] }, under: {...}, ... }
@@ -133,19 +122,9 @@ const new = {
     }
   }
 
-  /*
-SetMap {
-  map: Map(7) {
-    0 => Set(3) { '1', '3', 'Z' },
-    1 => Set(3) { 'w', 'A', 'B' },
-    2 => Set(3) { 'C', 'D', 'E' },
-    3 => Set(1) { 'F' },
-    4 => Set(2) { 'G', 'I' },
-    5 => Set(1) { 'L' },
-    6 => Set(1) { 'H' }
-  }
-}
-  */
+  /**
+   * Format sentences as replaceable params for display 
+   */
   buildSentences() {
     this.sentences = [];
     let sentenceCount = 0;
@@ -177,10 +156,12 @@ SetMap {
       this.sentences.push(sentence);
       lastHost = obj.id;
     }
-    //console.log(this.sentences);
   }
 
-
+  /**
+   * Returns a data structure sor sening as a message to the front-end
+   * @returns {object}
+   */
   returnData() {
     return {
       msg: this.sentences.join('. '),
@@ -189,5 +170,4 @@ SetMap {
       context: this.context
     };
   }
-
 };

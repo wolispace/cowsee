@@ -76,7 +76,7 @@ export class CommandManager extends Queue {
     };
     // add
     const objs = {}
-    objs[this.context.actor] = this.tickManager.objectManager.getById(this.context.actor);
+    objs[this.context.actor] = this.tickManager.objectManager.getFormattedById(this.context.actor);    
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {

@@ -26,6 +26,27 @@ export class LookManager {
 
   }
 
+    /**
+   * Returns an object for adding to the msg queue with a list of all obj
+   * @param {object} context 
+   */
+  list(context) {
+    this.context = context;
+    this.found = this.objectManager.findInLoc(this.context.loc);
+    if (this.found.size < 1) {
+      this.sentences.push('Nothing interesting here');
+      return returnData();
+    }
+    
+    this.objs = this.populateObjs();
+    let list = '';
+    for (const id of this.objs) {
+      list += `{${id}}, `;
+    }
+    this.sentences.push(list);
+    return this.returnData();
+  }
+
   look(context) {
     this.context = context;
     this.found = this.objectManager.findInLoc(this.context.loc);
@@ -133,10 +154,10 @@ SetMap {
       const firstId = ids.values().next().value; // read first from a Set
       const obj = this.objs[firstId];
       const host = obj?.host;
-      let showHost = 'You also see';
+      let showHost = '<br/><br/>You also see';
       if (host) {
         if (lastHost == host) {
-          showHost = `Also {${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
+          showHost = `{${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
         } else {
           showHost = `{${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
         }
@@ -145,16 +166,16 @@ SetMap {
       let delim = ' ';
       let objCounter = 1;
       for (const id of ids) {
+        const sub = this.objs[id];
         delim = (ids.size > 1 && objCounter++ >= ids.size) ? ' and ' : delim;
-
+        let objName = sub.class == 'player' ? `player called {${id}}` : `{${id}.plural}`;
         let descObj = `{${id}.pose} {${id}}`;
-        descObj = `{${id}.qtyText} {${id}.pose} {${id}.plural}`;
-
+        descObj = `{${id}.qtyText} {${id}.pose} ${objName}`;
         sentence += `${delim}${descObj}`;
         delim = ', ';
       }
       this.sentences.push(sentence);
-      lastHost = host;
+      lastHost = obj.id;
     }
     //console.log(this.sentences);
   }

@@ -87,5 +87,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function capitalEachSentence(text) {
-  return text.replace(/\.\s*([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
+  return text.replace(/\.\s+([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
 }

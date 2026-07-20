@@ -31,6 +31,14 @@ export class ObjectManager {
     return set.values().next().value;
   };
 
+  getFormattedById(id) {
+    const obj = this.getById(id);
+    if (obj) {
+      this.formatObject(obj);
+      return obj; 
+    } 
+  }
+
   /**
    * Returns an array of IDs with the required word eg: "cat" returns ["AB", "Ax" ...]
    * @param {string} key 
@@ -210,95 +218,6 @@ export class ObjectManager {
     }
   }
 
-  /**
-   * Generate a msg of all obj ids in the loc and adds it to the msg queue
-   * @param {object} context 
-   */
-  lookLoc0(context) {
-    const ids = this.findInLoc(context.loc);
-    let delim = '';
-    this.hosted = new SetMap();
-    this.unhosted = new SetMap();
-    this.objs = {};
-    // find all hosted 
-    for (const id of ids) {
-      const obj = this.getById(id);
-      this.objs[id] = obj;
-      this.formatObject(this.objs[id]);
-      if (obj.host) {
-        this.hosted.add(obj.host, obj.id);
-      } else {
-        this.unhosted.add('none', obj.id);
-      }
-    }
-
-    const data = {
-      msg: this.describeScene(),
-      loc: context.loc,
-      objs: this.objs,
-      context: context
-    };
-
-    this.tickManager.messageManager.add(data);
-
-    return data;
-  }
-
-  /**
-   * Describe a location usin ids so the client assemles
-   * "You see {Ax} and {Ac} with {je1} beside it and {gl} behind it. Under {Je1} is {dd2}."
-   * @returns {string}
-   */
-  describeScene() {
-    const roots = this.unhosted.get('none');
-    const sentences = [];
-
-    for (const id of roots) {
-      const desc = this.describeObject(id);
-
-      // Turn the recursive description into a readable sentence
-      // e.g. "table with chairs around it" → "You see a table with chairs around it."
-      sentences.push(`You see ${desc}.`);
-    }
-
-    return sentences.join(' ');
-  }
-
-  /**
-   * Returns a sentence combining an object and what it hosts (first draft not ideal)
-   * @param {string} id 
-   * @returns {string}
-   */
-  describeObject(id) {
-    const obj = this.objs[id];
-    const name = obj.longname || `{${id}}`;
-
-    // If nothing is hosted on this object, just return its name.
-    if (!this.hosted.has(id) || this.hosted.get(id).size === 0) {
-      return `{${id}}`;
-    }
-
-    const children = [...this.hosted.get(id)];
-
-    // Group children by how they are hosted
-    const byHow = {};
-    for (const child of children) {
-      const how = this.objs[child].hosthow;
-      if (!byHow[how]) byHow[how] = [];
-      byHow[how].push(child);
-    }
-
-    // Build clauses like:
-    // "with some chairs around it"
-    // "with a plate on it"
-    const clauses = Object.entries(byHow).map(([how, ids]) => {
-      const parts = ids.map(subId => this.describeObject(subId));
-      const joined = parts.join(' and ');
-      return `${joined} ${how} it`;
-    });
-
-    return `{${id}} with ${clauses.join(', ')}`;
-  }
 
   /**
    * Add all referenced objects into this context from "{Ax} says hi to {b2}"
@@ -312,7 +231,7 @@ export class ObjectManager {
       const value = data.context[varName] ?? '';
       const obj = this.getById(value);
       if (obj) {
-        data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color, link: true };
+        data.objs[value] = { name: obj.name, longname: obj.longname, color: obj.colour, link: true };
         return `{${value}}`;
       }
       return value; // fallback: plain text substitution

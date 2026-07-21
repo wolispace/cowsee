@@ -76,7 +76,7 @@ export class CommandManager extends Queue {
     };
     // add
     const objs = {}
-    objs[this.context.actor] = this.tickManager.objectManager.getFormattedById(this.context.actor);    
+    objs[this.context.actor] = this.tickManager.objectManager.getFormattedById(this.context.actor);
 
     const code = this.tickManager.objectManager.findCommand(firstword, this.context);
     if (!code) {
@@ -247,9 +247,9 @@ export class CommandManager extends Queue {
       - second $loc is optional, defaults to $loc 
     */
 
-    get: (rest) => {
+    get0: (rest) => {
       let variablesPart = '';
-      let getLocVar = '';
+      let getLocVar = 'loc';
       let getSecondLocVar = '';
       let nonGreedy = false;
 
@@ -310,7 +310,158 @@ export class CommandManager extends Queue {
       }
     },
 
+    // GET handler — faithful port of the original perl 'get' cowmand
+    // Follows the parsing sequence from cowmand_get.md
+    get: (rest) => {
+      // --- Step 1: Extract and clean input ---
+      let firstword = rest.trim();
+      firstword = firstword.replace(/`/g, "'");
 
+      // --- Step 2: Handle target history ---
+      const ltarget = this.context.target || this.context.last_target || '';
+      const lsecond = this.context.second || '';
+
+      // --- Step 3: Identify search locations (the 'in' keyword) ---
+      let getLocValue = 0;
+      let getSecondLocValue = 0;
+
+      const inMatch = firstword.match(/^(.+)\s+in\s+(.+)$/i);
+      if (inMatch) {
+        firstword = inMatch[1].trim();
+        const locParts = inMatch[2].split(',', 2).map(s => s.trim());
+        // Resolve each $loc variable
+        getLocValue = this.resolveValue(locParts[0]);
+        getSecondLocValue = locParts[1] ? this.resolveValue(locParts[1]) : getLocValue;
+      } else {
+        // Default to actor's current room
+        getLocValue = this.context.loc || '';
+        getSecondLocValue = getLocValue;
+      }
+
+      this.context.findTargetInLoc = getLocValue;
+      this.context.findSecondInLoc = getSecondLocValue;
+
+      // --- Step 4: Parse variable bits ---
+      // Split by comma, but respect quoted strings like "as"
+      const getBits = firstword.split(',').map(s => s.trim());
+      const gCount = getBits.length;
+
+      // --- Step 5: Check for non-greedy flag (4th param) ---
+      let nonGreedy = false;
+      if (gCount >= 4) {
+        // Any text in the 4th position triggers non-greedy matching
+        nonGreedy = true;
+      }
+
+      // Helper: determine if a bit is a quoted literal (e.g., "as", "to")
+      const isQuotedLiteral = (bit) => {
+        return (bit.startsWith('"') && bit.endsWith('"')) ||
+               (bit.startsWith("'") && bit.endsWith("'"));
+      };
+
+      // Helper: strip $ from variable name
+      const varName = (bit) => bit.replace(/^\$/, '');
+
+      // Helper: strip quotes from a literal
+      const unquote = (bit) => bit.replace(/^["']|["']$/g, '');
+
+      // --- Step 6: Map user input (cmd_text) into the variable slots ---
+      const cmdText = this.context.cmd_text || '';
+
+      if (gCount === 1) {
+        // get $target  →  $target = cmd_text
+        this.context[varName(getBits[0])] = cmdText;
+
+      } else if (gCount === 2) {
+        if (firstword.toLowerCase().includes('lastword')) {
+          // get $target,$lastword → split on LAST space: "colour the cat blue" → "colour the cat" + "blue"
+          const lastSpaceIdx = cmdText.lastIndexOf(' ');
+          if (lastSpaceIdx !== -1) {
+            this.context[varName(getBits[0])] = cmdText.substring(0, lastSpaceIdx);
+            this.context[varName(getBits[1])] = cmdText.substring(lastSpaceIdx + 1);
+          } else {
+            this.context[varName(getBits[0])] = cmdText;
+            this.context[varName(getBits[1])] = '';
+          }
+        } else {
+          // get $firstword,$target → split on FIRST space: "go towards the cat" → "go" + "towards the cat"
+          const firstSpaceIdx = cmdText.indexOf(' ');
+          if (firstSpaceIdx !== -1) {
+            this.context[varName(getBits[0])] = cmdText.substring(0, firstSpaceIdx);
+            this.context[varName(getBits[1])] = cmdText.substring(firstSpaceIdx + 1);
+          } else {
+            this.context[varName(getBits[0])] = cmdText;
+            this.context[varName(getBits[1])] = '';
+          }
+        }
+
+      } else if (gCount >= 3) {
+        // 3 or 4 variables: split cmd_text on relationship word
+        // The rel word is either a quoted literal (e.g., "as") or dynamic ($rel_words)
+        let relWords;
+        if (isQuotedLiteral(getBits[1])) {
+          // Quoted literal: use exactly that word as the splitter
+          relWords = unquote(getBits[1]);
+        } else {
+          // Dynamic: use standard relationship words
+          relWords = 'to|on|in|at|under|towards|from|with|into|as';
+        }
+
+        let splitMatch;
+        if (nonGreedy) {
+          // Non-greedy: split on FIRST occurrence of rel word
+          const relRegex = new RegExp(`^(.*?)\\s+(${relWords})\\s+(.*)$`, 'i');
+          splitMatch = cmdText.match(relRegex);
+        } else {
+          // Greedy (default): split on LAST occurrence of rel word
+          const relRegex = new RegExp(`^(.+)\\s+(${relWords})\\s+(.*)$`, 'i');
+          splitMatch = cmdText.match(relRegex);
+        }
+
+        if (splitMatch) {
+          const part1 = splitMatch[1].trim();
+          const relPart = splitMatch[2].trim();
+          const part3 = splitMatch[3].trim();
+
+          // Store the raw matched text into context vars
+          this.context[varName(getBits[0])] = part1;
+          this.context[varName(getBits[1])] = relPart;
+          this.context[varName(getBits[2])] = part3;
+        } else {
+          // No rel word found — put everything in the first variable
+          this.context[varName(getBits[0])] = cmdText;
+          this.context[varName(getBits[1])] = '';
+          this.context[varName(getBits[2])] = '';
+        }
+      }
+
+      // --- Step 7: Resolve objects (like perl's get_resolve) ---
+      // Save the raw text values, then resolve named objects to IDs
+      const ntarget = this.context.target;
+      const nsecond = this.context.second;
+
+      // Restore previous target/second before resolving
+      this.context.target = ltarget;
+      this.context.second = lsecond;
+
+      // Resolve: if the variable is 'target' or 'second', look up the object ID
+      if (ntarget) {
+        const resolved = this.tickManager.objectManager.findByNameInLoc(ntarget, getLocValue);
+        if (resolved) {
+          this.context.target = resolved;
+        } else {
+          this.context.target = ntarget; // keep raw text if no object found
+        }
+      }
+      if (nsecond) {
+        const resolved = this.tickManager.objectManager.findByNameInLoc(nsecond, getSecondLocValue);
+        if (resolved) {
+          this.context.second = resolved;
+        } else {
+          this.context.second = nsecond; // keep raw text if no object found
+        }
+      }
+    },
 
     // IF/THEN/ELSE handler
     if: (rest) => {
@@ -506,12 +657,12 @@ export class CommandManager extends Queue {
       this.runSub(rest);
     },
 
-    msg: (rest) => { 
+    msg: (rest) => {
       console.log(`msg`);
       // if($this_cmd =~ m/^msg (.+)/i){
       // &add_msg(eval($1)); # $loc,$actor,$target,$second,$action,$msg,$init_obj,$init_cmd
 
-      
+
     },
 
     flush: ($rest) => {

@@ -8,6 +8,7 @@ export class CommandManager extends Queue {
 
   subs = {};
   context = {}; // the context the statement is run agains (which actor which location etc..)
+  relWords='at|as|to|on|in|near|far from|far away from|away from|under|between|above|around|encompassing|beside|behind|leaning against|next to|through|against|with|by|over|across|facing|leaning|looking|leading|heading|pointing|going|running|to the|north|east|west|south|up|down|from|off';
 
   constructor(tickManager) {
     super();
@@ -246,72 +247,6 @@ export class CommandManager extends Queue {
       - the double $loc,$loc allows finding $target in $loc and Second in $actor
       - second $loc is optional, defaults to $loc 
     */
-
-    get0: (rest) => {
-      let variablesPart = '';
-      let getLocVar = 'loc';
-      let getSecondLocVar = '';
-      let nonGreedy = false;
-
-      // Check for two $locs: "... in $loc,$actor"
-      let match = rest.match(/(.+)\s+in\s+\$(\w+),\s*\$(\w+)/i);
-      if (match) {
-        variablesPart = match[1].trim();
-        getLocVar = match[2];
-        getSecondLocVar = match[3];
-      } else {
-        // Check for single $loc: "... in $loc"
-        match = rest.match(/(.+)\s+in\s+\$(\w+)/i);
-        if (match) {
-          variablesPart = match[1].trim();
-          getLocVar = match[2];
-        } else {
-          variablesPart = rest;
-        }
-      }
-
-      // need to handle 'get $text;' as 
-      const getLocValue = this.context[getLocVar] || '';
-      const getSecondLocValue = getSecondLocVar ? this.context[getSecondLocVar] || '' : getLocValue;
-      const variables = variablesPart.split(',').map(s => s.trim().substring(1)); // strip $
-      this.context.findTargetInLoc = getLocValue;
-      this.context.findSecondInLoc = getSecondLocValue;
-      if (variables.length >= 3) {
-        // Check for non-greedy flag (4th parameter)
-        if (variables.length >= 4 && variables[3].toLowerCase() === 'non-greedy') {
-          nonGreedy = true;
-        }
-        const relWords = ['to', 'on', 'in', 'at', 'under', 'towards'];
-        let match;
-        if (nonGreedy) {
-          // Non-greedy: split on FIRST occurrence of rel word
-          const relRegex = new RegExp(`^(.*?)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
-          match = this.context.cmd_text.match(relRegex);
-        } else {
-          // Greedy (default): split on LAST occurrence of rel word
-          const relRegex = new RegExp(`^(.+)\\s+(${relWords.join('|')})\\s+(.*)$`, 'i');
-          match = this.context.cmd_text.match(relRegex);
-        }
-        if (match) {
-          this.context['target1'] = match[1].trim(); // text
-          this.context['rel1'] = match[2].trim(); // rel
-          this.context['second1'] = match[3].trim(); // second
-
-          this.context[variables[0]] = this.tickManager.objectManager.findByNameInLoc(match[1].trim(), getLocValue); // text
-          this.context[variables[1]] = match[2].trim(); // rel
-          this.context[variables[2]] = this.tickManager.objectManager.findByNameInLoc(match[3].trim(), getSecondLocValue); // second
-        } else {
-          this.context[variables[0]] = this.context.cmd_text;
-          this.context[variables[1]] = '';
-          this.context[variables[2]] = '';
-        }
-      } else if (variables.length === 1) {
-        this.context[variables[0]] = this.context.cmd_text;
-      }
-    },
-
-    // GET handler — faithful port of the original perl 'get' cowmand
-    // Follows the parsing sequence from cowmand_get.md
     get: (rest) => {
       // --- Step 1: Extract and clean input ---
       let firstword = rest.trim();
@@ -404,7 +339,7 @@ export class CommandManager extends Queue {
           relWords = unquote(getBits[1]);
         } else {
           // Dynamic: use standard relationship words
-          relWords = 'to|on|in|at|under|towards|from|with|into|as';
+          relWords = this.relWords; //'to|on|in|at|under|towards|from|with|into|as';
         }
 
         let splitMatch;

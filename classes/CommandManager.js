@@ -145,7 +145,7 @@ export class CommandManager extends Queue {
    * Executes a single statement
    */
   executeStatement(statement) {
-    console.log({ statement });
+    //console.log({ statement });
     const trimmed = statement.trim();
     if (!trimmed) return;
 
@@ -506,7 +506,17 @@ export class CommandManager extends Queue {
       this.runSub(rest);
     },
 
+    msg: (rest) => { 
+      console.log(`msg`);
+      // if($this_cmd =~ m/^msg (.+)/i){
+      // &add_msg(eval($1)); # $loc,$actor,$target,$second,$action,$msg,$init_obj,$init_cmd
 
+      
+    },
+
+    flush: ($rest) => {
+      this.tickManager.objectManager.flush();
+    },
 
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
@@ -525,7 +535,6 @@ export class CommandManager extends Queue {
     loop: (rest) => { console.log(`loop`) },
     mode: (rest) => { console.log(`mode`) },
     motion: (rest) => { console.log(`motion`) },
-    msg: (rest) => { console.log(`msg`) },
     multiply: (rest) => { console.log(`multiply`) },
     nudge: (rest) => { console.log(`nudge`) },
     percentbar: (rest) => { console.log(`percentbar`) },

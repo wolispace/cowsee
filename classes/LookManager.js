@@ -133,7 +133,7 @@ export class LookManager {
       const firstId = ids.values().next().value; // read first from a Set
       const obj = this.objs[firstId];
       const host = obj?.host;
-      let showHost = '<br/><br/>You also see';
+      let showHost = '</div><div>You also see';
       if (host) {
         if (lastHost == host) {
           showHost = `{${obj.id}.hosthow} the {${host}.class} there {${obj.id}.is}`;
@@ -164,7 +164,7 @@ export class LookManager {
    */
   returnData() {
     return {
-      msg: this.sentences.join('. '),
+      msg: '<div>' + this.sentences.join('. ') + '</div>',
       loc: this.context.loc,
       objs: this.objs,
       context: this.context

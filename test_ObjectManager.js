@@ -12,7 +12,7 @@ const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 10; // so we dont stomp over the commands with test records
+const max = 50; // 50 so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 
@@ -36,7 +36,7 @@ if (generate) {
       colour: randomColour() 
     };
     obj.info = `It's a pretty ordinary ${obj.class}`;
-    objectManager.addToPools(obj);
+    objectManager.save(obj);
     if (counter % 100 === 0) {
       process.stdout.write(":");
     }
@@ -54,7 +54,7 @@ found.class = 'box';
 found.loc = '2';
 found.colour = 'pink',
 found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
-objectManager.addToPools(found);
+objectManager.save(found);
 
 found = objectManager.getById('3');
 console.log('found', found);
@@ -62,7 +62,7 @@ found.class = 'cat';
 found.loc = '2';
 found.colour = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
-objectManager.addToPools(found);
+objectManager.save(found);
 
 // add the wolis player id 'w'
 const player = {
@@ -72,7 +72,7 @@ const player = {
   loc: '2',
   colour: 'goldenrod'
 }
-objectManager.addToPools(player);
+objectManager.save(player);
 
 // save all pools to disk
 objectManager.savePoolsToDisk();
@@ -97,7 +97,7 @@ let result = commandManager.resolveValue(variable);
 console.log(`::: ${variable} = '${result}'`);
 
 const codeText2 = objectManager.findCommand('say', commandManager.context);
-console.log('find a command ', codeText2);
+// console.log('find a command ', codeText2);
 
 const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
 console.log({foundByNameInLoc});
@@ -109,7 +109,7 @@ found.pocket = '6',
 found.colour = 'tomato',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 `say 'think',"[$actor] .oO( $text )"`
-objectManager.addToPools(found);
+objectManager.save(found);
 
 objectManager.savePoolsToDisk();
 
@@ -160,6 +160,12 @@ function initCommands() {
   },{
     name: "pose",
     code: `get $target,\"as\",$text,non-greedy in $loc;\nset $target's pose to $text;\nsay 'pose',\"[$actor] poses [$target] as $text\";`
+  },{
+    name: "goto",
+    code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nlook $loc;`
+  },{
+    name: "flush",
+    code: `flush;say 'flush',"[$actor] flushed the pools";`
   }
 ];
 
@@ -168,7 +174,7 @@ function initCommands() {
     obj.loc = '3';
     obj.class = 'command',
     obj.color = randomColour(),
-    objectManager.addToPools(obj);
+    objectManager.save(obj);
   }
 }
 

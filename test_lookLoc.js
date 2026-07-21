@@ -8,7 +8,7 @@ const objectManager = tickManager.objectManager;
 const lookManager = tickManager.lookManager;
 const utils = new Utilities();
 
-const addObjects = false;
+const addObjects = true;
 
 console.log('---------------------------- START -------------------------------');
 const start = Date.now();
@@ -57,26 +57,26 @@ const addObj = (obj) => {
 
 function addTestObjects() {
   // 1. Nested recursion test: rug (A) > table (B) > plate (C) > cheese (D) > fly (E)
-  addObj({ id: 'A', class: 'rug', gender: 'it' });
-  addObj({ id: 'B', class: 'table', host: 'A', hosthow: 'on', qty: 1, is: 'is', gender: 'it' });
-  addObj({ id: 'C', class: 'plate', host: 'B', hosthow: 'on', qty: 1, is: 'is', gender: 'it' });
-  addObj({ id: 'D', class: 'cheese', host: 'C', hosthow: 'on', qty: 10, is: 'is', gender: 'it' });
-  addObj({ id: 'E', class: 'fly', host: 'D', hosthow: 'on', qty: 1, is: 'is', gender: 'it' });
+  objectManager.save({ id: 'A', loc: '2', qty: 1, class: 'rug' });
+  objectManager.save({ id: 'B', loc: '2', qty: 1, class: 'table', host: 'A', hosthow: 'on' });
+  objectManager.save({ id: 'C', loc: '2', qty: 1, class: 'plate', host: 'B', hosthow: 'on' });
+  objectManager.save({ id: 'D', loc: '2', qty: 3, class: 'cheese', host: 'C', hosthow: 'on' });
+  objectManager.save({ id: 'E', loc: '2', qty: 1, class: 'fly', host: 'D', hosthow: 'on' });
 
   // 2. Multiple children on table (B) to test list grouping and no-inlining
-  addObj({ id: 'F', class: 'fork', host: 'B', hosthow: 'on', qty: 1, is: 'is', gender: 'it' });
-  addObj({ id: 'G', class: 'knife', host: 'B', hosthow: 'on', qty: 1, is: 'is', gender: 'it' });
+  objectManager.save({ id: 'F', loc: '2', qty: 1, class: 'fork', host: 'B', hosthow: 'on' });
+  objectManager.save({ id: 'G', loc: '2', qty: 1, class: 'knife', host: 'B', hosthow: 'on' });
 
   // 3. Posed objects: bird (H) flying, cat (I) sleeping under B
-  addObj({ id: 'H', class: 'bird', pose: 'flying', qty: 1, is: 'is', gender: 'it' });
-  addObj({ id: 'I', class: 'cat', host: 'B', hosthow: 'under', pose: 'sleeping', qty: 1, is: 'is', gender: 'it' });
+  objectManager.save({ id: 'H', loc: '2', qty: 1, class: 'bird', pose: 'flying' });
+  objectManager.save({ id: 'I', loc: '2', qty: 1, class: 'dog', host: 'B', hosthow: 'under', pose: 'sleeping' });
 
   // 4. Hidden objects: box (J) hidden, key (K) sleeping under J
-  addObj({ id: 'J', class: 'fish', host: 'B', hosthow: 'on', pose: 'hidden', qty: 1, is: 'is', gender: 'it' });
-  addObj({ id: 'K', class: 'key', host: 'J', hosthow: 'under', pose: 'sleeping', qty: 1, is: 'is', gender: 'it' });
+  objectManager.save({ id: 'J', loc: '2', qty: 1, class: 'fish', host: 'B', hosthow: 'on', pose: 'hidden' });
+  objectManager.save({ id: 'K', loc: '2', qty: 1, class: 'key', host: 'J', hosthow: 'under', pose: 'sleeping' });
 
   // 5. Plural/gender test: mice (L) qty 6 around table (B)
-  addObj({ id: 'L', class: 'mouse', qty: 6, host: 'B', hosthow: 'around', pose: 'dancing', gender: 'them', is: 'are' });
+  objectManager.save({ id: 'L', loc: '2', qty: 6, class: 'mouse', host: 'B', hosthow: 'around', pose: 'dancing'});
 
   // save all pools to disk
   objectManager.savePoolsToDisk();

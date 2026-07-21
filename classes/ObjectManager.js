@@ -12,11 +12,21 @@ export class ObjectManager {
   pools = {};
   reactions = 0;
   maxReactions = 5;
+  keys = ['id', 'name', 'code', 'loc', 'trigger', 'info'];
 
   constructor(tickManager) {
     this.tickManager = tickManager;
-    for (const key of ['id', 'name', 'code', 'loc', 'trigger', 'info']) {
+    for (const key of this.keys) {
       this.pools[key] = new PoolManager(tickManager, key);
+    }
+  }
+
+  /**
+   * Flush all objects from all pools
+   */
+  flush() {
+    for (const key of this.keys) {
+      this.pools[key].clear();
     }
   }
 
@@ -188,7 +198,6 @@ export class ObjectManager {
     this.pools.name.set(obj.name, obj.id);
     this.pools.name.set(obj.class, obj.id);
     this.pools.loc.set(obj.loc, obj.id);
-
   }
 
   /**
@@ -260,6 +269,13 @@ export class ObjectManager {
   formatObject(obj) {
     this.formatQty(obj);
     this.formatPlural(obj);
+    if (obj.qty == 1) {
+      obj.is = 'is';
+      obj.gender = 'it';  
+    } else {
+      obj.is = 'are';
+      obj.gender = 'them';
+    }
     obj.longname = `${obj.qtyText} ${obj.plural}`;
     if (obj.name) {
       obj.longname += ' called ' + obj.name;

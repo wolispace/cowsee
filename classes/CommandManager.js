@@ -23,8 +23,6 @@ export class CommandManager extends Queue {
     request.on('end', () => {
       const command = JSON.parse(body);
       this.add(command);
-      // TODO: example of a save 
-      // this.tickManager.objectManager.save({id:"G", loc:"z", class:"mouse"});
       result.writeHead(200, { 'Content-Type': 'application/json' });
       result.end(JSON.stringify({ ok: true }));
       this.tickManager.doNext();
@@ -509,20 +507,16 @@ export class CommandManager extends Queue {
       const match = rest.match(/^(.+)\s*,\s*(.+)$/i);
       const objVar = match[1].substring(1); // $target -> target
       const params = match[2];
-      const objName = this.context[objVar];
-      if (!objName) return;
-
-      const objId = this.tickManager.objectManager.findByNameInLoc(objName, this.context.loc);
+      const objId = this.context[objVar];
       if (!objId) return;
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
 
-      // if params == 'xyz' we only clear those
+      // TODO: if params == 'xyz' we only clear those
       delete obj.host;
       delete obj.hosthow;
       delete obj.pose;
-
-      // clear the x, y and z and maybe other positional things
+      // TODO: clear the x, y and z and maybe other positional things
 
       // Save the updated object
       this.tickManager.objectManager.save(obj);

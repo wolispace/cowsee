@@ -21,8 +21,9 @@ export class CommandManager extends Queue {
     let body = '';
     request.on('data', chunk => body += chunk);
     request.on('end', () => {
-      const command = JSON.parse(body);
-      this.add(command);
+      const userCommand = JSON.parse(body);
+      // userCommand = {actor: 'w', loc: '2', cmd: 'create a small black cat'}
+      this.add(userCommand);
       result.writeHead(200, { 'Content-Type': 'application/json' });
       result.end(JSON.stringify({ ok: true }));
       this.tickManager.doNext();
@@ -30,13 +31,20 @@ export class CommandManager extends Queue {
   }
 
   /**
-   * Take the next command off the queue and parse it and process the bits
+   * Take the next userCommand off the queue and parse it and process the bits
    */
   doNext() {
     if (this.pending()) {
-      const command = this.get();
-      this.parse(command);
+      const userCommand = this.get();
+      this.parse(userCommand);
     }
+  }
+
+  show() {
+    console.log(`\n--- Commands in queue: ${this.pending()} ---`);
+    this.queue.forEach((cmd, i) => {
+      console.log(`cmd ${i + 1}:`, cmd);
+    });
   }
 
   /**
@@ -53,7 +61,7 @@ export class CommandManager extends Queue {
   }
   /**
    * parse user input (specifically focusing on 'say')
-   * @param {object} commandObj { cmd: "say hello everyone", actor: "wolis", loc: "A", niceness: 0 }
+   * @param {object} commandObj { cmd: "say hello everyone", actor: "w", loc: "A", niceness: 0 }
    */
   parse(commandObj) {
     // reset reactions after a human sends something

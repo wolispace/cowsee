@@ -26,7 +26,8 @@ export class MessageManager extends Queue {
     });
 
     this.#clients.add(result);
-    this.send({ type: {status: 'started'} });
+    // this is the first message sent, use this to prep the playerInfo as they log in
+    this.send({ info: this.tickManager.playerInfo });
     request.on('close', () => this.#clients.delete(result));
   }
 
@@ -34,6 +35,16 @@ export class MessageManager extends Queue {
     const payload = `data: ${JSON.stringify(data)}\n\n`;
     for (const result of this.#clients) result.write(payload);
     this.tickManager.commandManager.reactions(data);
+  }
+
+  show() {
+    console.log(`\n--- Messages in queue: ${this.pending()} ---`);
+    this.queue.forEach((msg, i) => {
+      console.log(`msg ${i + 1}:`, msg.msg);
+      if (msg.objs) {
+        console.log('  objs:', Object.keys(msg.objs));
+      }
+    });
   }
 
 }

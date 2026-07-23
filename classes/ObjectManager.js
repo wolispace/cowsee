@@ -60,6 +60,25 @@ export class ObjectManager {
   };
 
   /**
+   * Return the obj of the player matching the name
+   * TODO: worry about passwords later
+   * @param {string} user 
+   * @param {string} pw 
+   * @returns 
+   */
+  findUser(user, pw) {
+    const candidates = this.pools.name.get(user);
+    // check all candidates to ensire they are class='player'
+    // TODO: worry about password later
+    for (const id of candidates) {
+      const obj = this.getById(id);
+      if (obj.class == 'player') {
+        return obj; 
+      }
+    }
+  }
+
+  /**
    * Find the first named object in the location
    * @param {string} name 
    * @param {string} loc 

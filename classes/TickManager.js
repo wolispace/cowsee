@@ -3,22 +3,25 @@ import { CommandManager } from './CommandManager.js';
 import { ObjectManager } from './ObjectManager.js';
 import { LookManager } from './LookManager.js';
 import { FileManager } from './FileManager.js';
+import { PlayerManager } from './PlayerManager.js';
 
 
 export class TickManager {
   interval = 5_000;
+  playerInfo = {id: 'w', loc: '2'};
+  #isProcessing = false;
+
   constructor(testing = false) {
     this.commandManager = new CommandManager(this);
     this.messageManager = new MessageManager(this);
     this.fileManager = new FileManager(this);
     this.objectManager = new ObjectManager(this);
     this.lookManager = new LookManager(this);
+    this.playerManager = new PlayerManager(this);
     
     if (testing) return;
     setInterval(() => this.doNext(), this.interval);
   }
-
-  #isProcessing = false;
 
   doNext() {
     if (this.#isProcessing) return;

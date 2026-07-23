@@ -2,7 +2,7 @@
 const ev = new EventSource("/events");
 
 // TODO set this when we log in
-const thisPlayer = 'w';
+const playerInfo = {id: 'w', loc: '2'};
 
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
@@ -14,12 +14,30 @@ ev.onmessage = (e) => {
 //   appendInfo("Update: " + e.data);
 // });
 
+
+/**
+ * Sets stuff about the currently logged in player, their id and loc are they main things
+ * @param {object} info 
+ */
+function setPlayerInfo(info) {
+  if (info.id) {
+    playerInfo.id = info.id;
+  }
+  if (info.loc) {
+    playerInfo.loc = info.loc;
+  }
+}
+
 // Helper to append text to the .info section
 function appendInfo(text) {
   const info = document.querySelector(".info");
   const div = document.createElement("div");
   const json = JSON.parse(text);
   console.log(json);
+  
+  // grab the current obj and use its loc to update the playerInfo
+
+
   if (json.msg) {
       // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
       json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
@@ -30,7 +48,7 @@ function appendInfo(text) {
           let val = obj[prop] !== undefined ? obj[prop] : '';
 
           // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
-          if (prop === 'longname' && json.context && id === thisPlayer) {
+          if (prop === 'longname' && json.context && id === playerInfo.id) {
               val = `${obj.name} (you)`;
           }
 
@@ -62,12 +80,12 @@ function appendInfo(text) {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.searchform').addEventListener('submit', e => {
     e.preventDefault();
-    const q = document.getElementById('q').value;
+    playerInfo.cmd = document.getElementById('q').value;
     document.getElementById('q').value = '';
     fetch('/command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actor: thisPlayer, cmd: q })
+      body: JSON.stringify(playerInfo)
     });
   });
 

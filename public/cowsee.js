@@ -78,32 +78,44 @@ function appendInfo(text) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('.searchform').addEventListener('submit', e => {
+  document.querySelector('.searchform').addEventListener('submit', async (e) => {
     e.preventDefault();
     playerInfo.cmd = document.getElementById('q').value;
     document.getElementById('q').value = '';
-    fetch('/command', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(playerInfo)
-    });
+      await fetchJson('/command', playerInfo);
   });
 
   // Delegated click handler for object links (examine on click)
-  document.querySelector('.info').addEventListener('click', (e) => {
+  document.querySelector('.info').addEventListener('click', async (e) => {
     const link = e.target.closest('.obj-link');
     if (link) {
       e.preventDefault();
       const id = link.dataset.id;
-      fetch('/command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cmd: `examine ${id}` })
-      });
+      playerInfo.cmd = `examine ${id}`;
+      await fetchJson('/command', playerInfo);
     }
   });
 });
 
 function capitalEachSentence(text) {
   return text.replace(/\.\s+([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
+}
+
+// bundle up a form and sent it to the server as a /command and simply show the result for now
+async function saveForm() {
+  const form = document.querySelector('form');
+  const formData = new FormData(form);
+  const json = Object.fromEntries(formData.entries());
+  const result = await fetchJson('/command', json);
+  // do something with the result
+}
+
+// sends a json object to the server and return the json response
+async function fetchJson(type, json) {
+  const response = await fetch(type, { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(json),
+  });
+  return await response.json();
 }

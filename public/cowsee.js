@@ -29,11 +29,10 @@ function setPlayerInfo(info) {
 }
 
 // Helper to append text to the .info section
-function appendInfo(text) {
-  const section = text.includes('You see') ? '#top' : '#bottom';
+function appendInfo(data) {
   const info = document.querySelector(section);
   const div = document.createElement("div");
-  const json = JSON.parse(text);
+  const json = JSON.parse(data);
   console.log(json);
   
   // grab the current obj and use its loc to update the playerInfo
@@ -74,7 +73,7 @@ function appendInfo(text) {
   }
   if (json.msg) {
     div.innerHTML = capitalEachSentence(json.msg);
-    if (section == '#top') {
+    if (json.top) {
       info.replaceChildren(div);
       // auto-scroll top for new look around
       // TODO: only scroll if the current scroll position is at the bottom before appending the content

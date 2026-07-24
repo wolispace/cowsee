@@ -12,7 +12,7 @@ const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 50; // 50 so we dont stomp over the commands with test records
+const max = 5000; // 50 so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 
@@ -153,16 +153,16 @@ function initCommands() {
     code: `say 'look',"[$actor] looks around";\nrelook $loc;`
   },{
     name: "put",
-    code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nlook $loc;`
+    code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nrelook $loc;`
   },{
     name: "push",
     code: `get $target in $loc;\nclear $target,all;\nsay 'push',\"[$actor] pushes [$target]\";\nrelook $loc;`
   },{
     name: "pose",
-    code: `get $target,\"as\",$text,non-greedy in $loc;\nset $target's pose to $text;\nsay 'pose',\"[$actor] poses [$target] as $text\";`
+    code: `get $target,\"as\",$text,non-greedy in $loc;\nset $target's pose to $text;\nsay 'pose',\"[$actor] poses [$target] as $text;\"\nrelook $loc;`
   },{
     name: "goto",
-    code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nlook $loc;`
+    code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nrelook $loc;`
   },{
     name: "flush",
     code: `flush;say 'flush',"[$actor] flushed the pools";`

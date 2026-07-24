@@ -167,7 +167,8 @@ export class LookManager {
       msg: '<div>' + this.sentences.join('. ') + '</div>',
       loc: this.context.loc,
       objs: this.objs,
-      context: this.context
+      context: this.context,
+      top: true, // this message replaces the top section if true
     };
   }
 };

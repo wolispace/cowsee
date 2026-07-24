@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset='utf-8'>
-  <title>cowsee v{{version}}</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, interactive-widget=resizes-visual' />
-    <link rel='stylesheet' href='cowsee.css?{{version}}' />
-    <script src='cowsee.js?{{version}}'></script>
-</head>
-<body>
-  <form class="commandform">
-    <label for="q" class="commandlabel">Command </label>
-    <input type="text" class="commandterm" name="q" id="q" placeholder="What do you want to do?" value="{{q}}" />
-    <input type="submit" class="commandbutton" value="Go" />
-  </form> 
-
-<div id='app'>
-    <h2>cowsee</h2>
-    <section class="info">
-      {{info}}
-    </section>    
-</div>
-</body>
+  <head>
+    <meta charset='utf-8'>
+    <title>cowsee v{{version}}</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0, interactive-widget=resizes-visual' />
+      <link rel='stylesheet' href='cowsee.css?{{version}}' />
+      <script src='cowsee.js?{{version}}'></script>
+  </head>
+  <body>
+    <content>
+      <section id="top">
+        <h2>cowsee</h2>
+        You are in.. 
+      </section>
+      <div id="splitter"><hr/></div>
+      <secton id="bottom">
+        Message list
+      </secton>
+      <form class="commandform">
+        <label for="q" class="commandlabel">Command </label>
+        <input type="text" class="commandterm" name="q" id="q" placeholder="What do you want to do?" value="{{q}}" />
+        <input type="submit" class="commandbutton" value="Go" />
+      </form> 
+    </content>
+  </body>
 </html>

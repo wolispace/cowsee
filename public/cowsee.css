@@ -33,13 +33,13 @@ a:hover {
   padding: 1rem;
 }
 
-section.info {
+section {
   background-color: rgba(0,0,0,.35);
   border-radius: 1rem;
   padding: 1rem;
 }
 
-section.info div {
+section div {
  padding-bottom: 0.5rem; 
 }
 
@@ -50,6 +50,7 @@ section.info div {
   width: 100%;
   display: flex;
   position: fixed;
+  bottom: 0;
 }
 
 .commandlabel {

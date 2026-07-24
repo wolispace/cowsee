@@ -30,7 +30,7 @@ function setPlayerInfo(info) {
 
 // Helper to append text to the .info section
 function appendInfo(text) {
-  const info = document.querySelector(".info");
+  const info = document.querySelector("#bottom");
   const div = document.createElement("div");
   const json = JSON.parse(text);
   console.log(json);
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Delegated click handler for object links (examine on click)
-  document.querySelector('.info').addEventListener('click', async (e) => {
+  document.querySelector('section').addEventListener('click', async (e) => {
     const link = e.target.closest('.obj-link');
     if (link) {
       e.preventDefault();

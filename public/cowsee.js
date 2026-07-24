@@ -6,14 +6,8 @@ const playerInfo = {id: 'w', loc: '2'};
 
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
-  appendInfo( e.data);
+  handleMsg( e.data);
 };
-
-// If you send named events (event: update)
-// ev.addEventListener("update", (e) => {
-//   appendInfo("Update: " + e.data);
-// });
-
 
 /**
  * Sets stuff about the currently logged in player, their id and loc are they main things
@@ -29,11 +23,30 @@ function setPlayerInfo(info) {
 }
 
 // Helper to append text to the .info section
-function appendInfo(data) {
-  const info = document.querySelector(section);
-  const div = document.createElement("div");
+function handleMsg(data) {
   const json = JSON.parse(data);
   console.log(json);
+  if (json.token) {
+    // we are a new session, so prompt for login
+    console.log('prompt for user');
+  } else if (json.login) {
+    console.log(' the user has logged in');
+  } else if (json.logout) {
+    console.log('the user has logged out');
+  } else if (json.retry) {
+    console.log('retry login');
+  } else if (json.msg) {
+    // TODO: ensure this player is logged in, otherwise skip this message
+    addMessage(json);
+  }
+  // unhandled msg from server
+ 
+}
+
+function addMessage(json) {
+  const div = document.createElement("div");
+  const section = json.top ? '#top' : '#bottom';
+  const info = document.querySelector(section);
   
   // grab the current obj and use its loc to update the playerInfo
 

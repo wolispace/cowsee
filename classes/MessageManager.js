@@ -5,6 +5,7 @@ import { Queue } from './Queue.js';
 export class MessageManager extends Queue {
 
   #clients = new Set();
+  players = new Set();
 
   constructor(tickManager) {
     super();
@@ -26,8 +27,7 @@ export class MessageManager extends Queue {
     });
 
     this.#clients.add(result);
-    // this is the first message sent, use this to prep the playerInfo as they log in
-    this.send({ info: this.tickManager.playerInfo });
+    this.send({ token: crypto.randomUUID() });
     request.on('close', () => this.#clients.delete(result));
   }
 

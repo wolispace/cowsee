@@ -12,7 +12,7 @@ const commandManager = tickManager.commandManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 5000; // 50 so we dont stomp over the commands with test records
+const max = 50; // 50 so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 

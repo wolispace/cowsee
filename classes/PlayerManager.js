@@ -1,6 +1,6 @@
 // handls all interactions with players, logging in authenticating, storing stuff, movnig locations
 export class PlayerManager {
-  #sessions = {}; // token -> username
+  #sessions = new Map(); // token -> username
 
   constructor(tickManager) {
     this.tickManager = tickManager;
@@ -65,5 +65,16 @@ export class PlayerManager {
     // TODO: check DB with hashed pw
     const obj = this.tickManager.objectManager.findUser(user, pw);
     return (obj) ? true : false;
+  }
+
+  /**
+   * Adds the user to the list of current players
+   * @param {string} user 
+   * @param {string} pw 
+   */
+  add(user, pw) {
+    const obj = this.tickManager.objectManager.findUser(user, pw);
+    const token = crypto.randomUUID();
+    this.#sessions.set(token) = {user: user, pw: pw};
   }
 }

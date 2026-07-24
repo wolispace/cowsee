@@ -30,7 +30,8 @@ function setPlayerInfo(info) {
 
 // Helper to append text to the .info section
 function appendInfo(text) {
-  const info = document.querySelector("#bottom");
+  const section = text.includes('You see') ? '#top' : '#bottom';
+  const info = document.querySelector(section);
   const div = document.createElement("div");
   const json = JSON.parse(text);
   console.log(json);
@@ -73,9 +74,18 @@ function appendInfo(text) {
   }
   if (json.msg) {
     div.innerHTML = capitalEachSentence(json.msg);
-    info.appendChild(div);
-    // auto-scroll bottom to newest content
-    info.scrollTop = info.scrollHeight;
+    if (section == '#top') {
+      info.replaceChildren(div);
+      // auto-scroll top for new look around
+      // TODO: only scroll if the current scroll position is at the bottom before appending the content
+      info.scrollTop = 0;
+
+    } else {
+      info.appendChild(div);
+      // auto-scroll bottom to newest content
+      // TODO: only scroll if the current scroll position is at the bottom before appending the content
+      info.scrollTop = info.scrollHeight;
+    }
   }
 }
 

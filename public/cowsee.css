@@ -147,7 +147,7 @@ section div {
 #menu {
     position: fixed;
     top: 0.5rem;
-    right: 0.5rem;
+    right: 1rem;
     z-index: 1000;
     width: 2rem;
     height: 2rem;

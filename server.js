@@ -26,7 +26,7 @@ const server = http.createServer((request, result) => {
   if (request.url === '/command' && request.method === 'POST') {
     return tickManager.commandManager.handle(request, result);
   }
-  if (request.url === '/login' && request.method === 'POST') {
+  if (request.url === '/player' && request.method === 'POST') {
     return tickManager.playerManager.handle(request, result);
   }
   tickManager.fileManager.handle(request, result, app);

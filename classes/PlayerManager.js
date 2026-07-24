@@ -6,28 +6,6 @@ export class PlayerManager {
     this.tickManager = tickManager;
   }
 
-  handleLogin(request, result) {
-    let body = '';
-    request.on('data', chunk => body += chunk);
-    request.on('end', () => {
-      const params = Object.fromEntries(new URLSearchParams(body));
-      const { user, pw } = params;
-
-      // TODO: validate against DB
-      if (this.#validate(user, pw)) {
-        const token = crypto.randomUUID();
-        this.#sessions[token] = user;
-        result.writeHead(302, {
-          'Set-Cookie': `session=${token}; HttpOnly; Path=/`,
-          'Location': `/?user=${encodeURIComponent(user)}`
-        });
-      } else {
-        result.writeHead(302, { 'Location': '/login.html?error=Invalid+username+or+password' });
-      }
-      result.end();
-    });
-  }
-
   handle(request, result) {
     let body = '';
     request.on('data', chunk => body += chunk);
@@ -35,8 +13,14 @@ export class PlayerManager {
       const data = JSON.parse(body);
       console.log('form post', data);
       if (!data) { result.writeHead(401); result.end(); return; }
-      const token = crypto.randomUUID();
-      this.#sessions[token] = data;
+
+      if (data.type == 'login') {
+        this.#sessions[data.token] = data;
+      } else if (data.type == 'logoff') {
+
+      } else {
+
+      }
       result.writeHead(200, {
         'Content-Type': 'application/json'
       });
@@ -45,16 +29,6 @@ export class PlayerManager {
     });
   }
 
-  handleLogout(request, result) {
-    const cookie = request.headers.cookie ?? '';
-    const token = cookie.match(/session=([^;]+)/)?.[1];
-    if (token) delete this.#sessions[token];
-    result.writeHead(302, {
-      'Set-Cookie': 'session=; HttpOnly; Path=/; Max-Age=0',
-      'Location': '/login.html'
-    });
-    result.end();
-  }
 
   getSession(request) {
     const cookie = request.headers.cookie ?? '';

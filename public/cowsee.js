@@ -4,6 +4,9 @@ const ev = new EventSource("/events");
 // TODO set this when we log in
 const playerInfo = {id: 'w', loc: '2'};
 
+const TOKEN_KEY = 'token';
+const PLAYER_KEY = 'player';
+
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
   handleMsg( e.data);
@@ -27,8 +30,14 @@ function handleMsg(data) {
   const json = JSON.parse(data);
   console.log(json);
   if (json.token) {
-    // we are a new session, so prompt for login
-    showLoginDialog(json);
+    // we are a new session, so remember this token and prompt for login
+    localStorage.setItem(TOKEN_KEY, json.token);
+    const id = localStorage.getItem(PLAYER_KEY);
+    if (id) {
+      // alreayd logged in so setup player and find their current loc
+    } else {
+      showLoginDialog(json);
+    }
   } else if (json.login) {
     console.log(' the user has logged in');
   } else if (json.logout) {
@@ -207,6 +216,7 @@ function capitalEachSentence(text) {
 
 // sends a json object to the server and return the json response
 async function fetchJson(type, json) {
+  json.token = localStorage.getItem(TOKEN_KEY);
   const response = await fetch(type, { 
     method: 'POST', 
     headers: { 'Content-Type': 'application/json' },
@@ -244,10 +254,13 @@ function showLoginDialog() {
   showDialog(html);
 }
 
-// based on the hidden type of the form whay do we do
+// based on the hidden type of the form what do we do
 async function handleForm(data) {
   if (data.type == 'login') {
-    const result = await fetchJson('/login', data);
+    const result = await fetchJson('/player', data);
+    closeDialog();
+  } else if ( data.type == 'logoff') { 
+    const result = await fetchJson('/player', data);
     closeDialog();
   } else {
     await sendCommand();

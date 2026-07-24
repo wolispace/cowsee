@@ -78,7 +78,8 @@ function appendInfo(text) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('.searchform').addEventListener('submit', async (e) => {
+
+  document.querySelector('.commandform').addEventListener('submit', async (e) => {
     e.preventDefault();
     playerInfo.cmd = document.getElementById('q').value;
     document.getElementById('q').value = '';

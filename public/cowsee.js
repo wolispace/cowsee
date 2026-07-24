@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const panels = document.getElementById('panels');
   const top = document.getElementById('top');
   const bottom = document.getElementById('bottom');
+  const input = document.getElementById('input');
   const minHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-min-height')) * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
   let dragging = false;
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       newBottomH = minHeight;
       newTopH = startTopH + startBottomH - minHeight;
     }
+    newBottomH -= input.getBoundingClientRect().height;
 
     top.style.flex = `0 0 ${newTopH}px`;
     bottom.style.flex = `0 0 ${newBottomH}px`;

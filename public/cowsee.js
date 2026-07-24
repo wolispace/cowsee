@@ -28,7 +28,7 @@ function handleMsg(data) {
   console.log(json);
   if (json.token) {
     // we are a new session, so prompt for login
-    console.log('prompt for user');
+    showLoginDialog(json);
   } else if (json.login) {
     console.log(' the user has logged in');
   } else if (json.logout) {
@@ -103,11 +103,12 @@ function addMessage(json) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  document.querySelector('.commandform').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    playerInfo.cmd = document.getElementById('q').value;
-    document.getElementById('q').value = '';
-      await fetchJson('/command', playerInfo);
+  // universal form submit we pass to the handler for forms
+  document.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const form = ev.target;
+    const data = Object.fromEntries(new FormData(form));
+    handleForm(data);
   });
 
   // Delegated click handler for object links in both sections
@@ -116,9 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const link = e.target.closest('.obj-link');
       if (link) {
         e.preventDefault();
-        const id = link.dataset.id;
-        playerInfo.cmd = `examine ${id}`;
-        await fetchJson('/command', playerInfo);
+        await sendCommand(`examine ${link.dataset.id}`)
       }
     });
   });
@@ -206,15 +205,6 @@ function capitalEachSentence(text) {
   return text.replace(/\.\s+([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
 }
 
-// bundle up a form and sent it to the server as a /command and simply show the result for now
-async function saveForm() {
-  const form = document.querySelector('form');
-  const formData = new FormData(form);
-  const json = Object.fromEntries(formData.entries());
-  const result = await fetchJson('/command', json);
-  // do something with the result
-}
-
 // sends a json object to the server and return the json response
 async function fetchJson(type, json) {
   const response = await fetch(type, { 
@@ -223,4 +213,49 @@ async function fetchJson(type, json) {
     body: JSON.stringify(json),
   });
   return await response.json();
+}
+
+function showDialog(html) {
+  const dlg = document.getElementById("dialog");
+  dlg.innerHTML = html;
+  dlg.showModal();
+}
+
+function closeDialog() {
+  const dlg = document.getElementById("dialog");
+  dlg.close();
+}
+
+function showLoginDialog() {
+  const html = `
+    <form method="dialog" id="loginform">
+    <input type="hidden" name="type" value="login">
+      <label for="playername">Your name:</label>
+      <input type="text" id="playername" name="playername" required>
+      <label for="pw">Password:</label>
+      <input type="password" id="pw" name="pw" required>
+      <label for="email">Email: (optional for password recovery)</label>
+      <input type="text" id="emial" name="email">
+      <menu>
+        <button value="submit">Login</button>
+      </menu>
+    </form>
+  `;
+  showDialog(html);
+}
+
+// based on the hidden type of the form whay do we do
+async function handleForm(data) {
+  if (data.type == 'login') {
+    const result = await fetchJson('/login', data);
+    closeDialog();
+  } else {
+    await sendCommand();
+  }
+}
+
+async function sendCommand(cmd) {
+  playerInfo.cmd = cmd ?? document.getElementById('cmd').value;
+  document.getElementById('cmd').value = '';
+  await fetchJson('/command', playerInfo);
 }

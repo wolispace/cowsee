@@ -28,19 +28,20 @@ export class PlayerManager {
     });
   }
 
-  handleAutoLogin(request, result) {
+  handle(request, result) {
     let body = '';
     request.on('data', chunk => body += chunk);
     request.on('end', () => {
-      const { user } = JSON.parse(body);
-      if (!user) { result.writeHead(401); result.end(); return; }
+      const data = JSON.parse(body);
+      console.log('form post', data);
+      if (!data) { result.writeHead(401); result.end(); return; }
       const token = crypto.randomUUID();
-      this.#sessions[token] = user;
+      this.#sessions[token] = data;
       result.writeHead(200, {
-        'Set-Cookie': `session=${token}; HttpOnly; Path=/`,
         'Content-Type': 'application/json'
       });
-      result.end(JSON.stringify({ ok: true }));
+      // DEBUG: auto login as wolis
+      result.end(JSON.stringify({ id: 'w', player: 'wolis' }));
     });
   }
 

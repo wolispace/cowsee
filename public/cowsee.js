@@ -74,6 +74,8 @@ function appendInfo(text) {
   if (json.msg) {
     div.innerHTML = capitalEachSentence(json.msg);
     info.appendChild(div);
+    // auto-scroll bottom to newest content
+    info.scrollTop = info.scrollHeight;
   }
 }
 
@@ -86,16 +88,94 @@ document.addEventListener('DOMContentLoaded', () => {
       await fetchJson('/command', playerInfo);
   });
 
-  // Delegated click handler for object links (examine on click)
-  document.querySelector('section').addEventListener('click', async (e) => {
-    const link = e.target.closest('.obj-link');
-    if (link) {
-      e.preventDefault();
-      const id = link.dataset.id;
-      playerInfo.cmd = `examine ${id}`;
-      await fetchJson('/command', playerInfo);
-    }
+  // Delegated click handler for object links in both sections
+  document.querySelectorAll('#top, #bottom').forEach(section => {
+    section.addEventListener('click', async (e) => {
+      const link = e.target.closest('.obj-link');
+      if (link) {
+        e.preventDefault();
+        const id = link.dataset.id;
+        playerInfo.cmd = `examine ${id}`;
+        await fetchJson('/command', playerInfo);
+      }
+    });
   });
+
+  // ── Splitter drag logic ──
+  const splitter = document.getElementById('splitter');
+  const panels = document.getElementById('panels');
+  const top = document.getElementById('top');
+  const bottom = document.getElementById('bottom');
+  const minHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--section-min-height')) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+  let dragging = false;
+  let startY = 0;
+  let startTopH = 0;
+  let startBottomH = 0;
+  let splitRatio = null; // null = use CSS flex defaults; 0–1 = top's share after drag
+
+  /** Redistribute top/bottom within #panels based on the stored ratio */
+  function applySplitRatio() {
+    if (splitRatio === null) return; // CSS flex handles it before any drag
+    const available = panels.getBoundingClientRect().height - splitter.getBoundingClientRect().height;
+
+    let topH = available * splitRatio;
+    let bottomH = available * (1 - splitRatio);
+
+    // enforce minimums
+    if (topH < minHeight)    { topH = minHeight;    bottomH = available - minHeight; }
+    if (bottomH < minHeight) { bottomH = minHeight;  topH = available - minHeight; }
+
+    top.style.flex = `0 0 ${topH}px`;
+    bottom.style.flex = `0 0 ${bottomH}px`;
+  }
+
+  splitter.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startTopH = top.getBoundingClientRect().height;
+    startBottomH = bottom.getBoundingClientRect().height;
+    splitter.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  splitter.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dy = e.clientY - startY;
+    let newTopH = startTopH + dy;
+    let newBottomH = startBottomH - dy;
+
+    // enforce minimums
+    if (newTopH < minHeight) {
+      newTopH = minHeight;
+      newBottomH = startTopH + startBottomH - minHeight;
+    }
+    if (newBottomH < minHeight) {
+      newBottomH = minHeight;
+      newTopH = startTopH + startBottomH - minHeight;
+    }
+
+    top.style.flex = `0 0 ${newTopH}px`;
+    bottom.style.flex = `0 0 ${newBottomH}px`;
+  });
+
+  splitter.addEventListener('pointerup', (e) => {
+    dragging = false;
+    splitter.releasePointerCapture(e.pointerId);
+    // store ratio so resizes stay proportional
+    const topH = top.getBoundingClientRect().height;
+    const bottomH = bottom.getBoundingClientRect().height;
+    splitRatio = topH / (topH + bottomH);
+  });
+
+  splitter.addEventListener('pointercancel', (e) => {
+    dragging = false;
+  });
+
+  // ── Proportional resize when viewport changes (keyboard, window resize) ──
+  new ResizeObserver(() => {
+    if (!dragging) applySplitRatio();
+  }).observe(panels);
 });
 
 function capitalEachSentence(text) {

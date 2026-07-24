@@ -9,19 +9,22 @@
   </head>
   <body>
     <content>
-      <section id="top">
-        <h2>cowsee</h2>
-        You are in.. 
-      </section>
-      <div id="splitter"><hr/></div>
-      <secton id="bottom">
-        Message list
-      </secton>
-      <form class="commandform">
+      <div id="panels">
+        <section id="top">
+          <h2>cowsee</h2>
+          You are in.. 
+        </section>
+        <div id="splitter"><hr/></div>
+        <section id="bottom">
+          Message list
+        </section>
+      </div>
+      <form id="input" class="commandform">
         <label for="q" class="commandlabel">Command </label>
         <input type="text" class="commandterm" name="q" id="q" placeholder="What do you want to do?" value="{{q}}" />
         <input type="submit" class="commandbutton" value="Go" />
       </form> 
     </content>
+    <div id="menu">&#9776;</div>
   </body>
 </html>

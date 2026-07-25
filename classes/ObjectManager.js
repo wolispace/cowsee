@@ -62,17 +62,19 @@ export class ObjectManager {
   /**
    * Return the obj of the player matching the name
    * TODO: worry about passwords later
-   * @param {string} user 
-   * @param {string} pw 
-   * @returns 
+   * @param {object} data with data.username and data.pw
+   * @returns {object}
    */
-  findUser(user, pw) {
-    const candidates = this.pools.name.get(user);
-    // check all candidates to ensire they are class='player'
+  findPlayer(data) {
+    const candidates = this.pools.name.get(data.playername);
+    console.log('findPlayer', data, candidates);
+    // check all candidates to ensure they are class='player'
     // TODO: worry about password later
     for (const id of candidates) {
       const obj = this.getById(id);
       if (obj.class == 'player') {
+        // first player with matching name..
+        // TODO: compare passwords too
         return obj; 
       }
     }

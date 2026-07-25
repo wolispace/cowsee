@@ -2,14 +2,14 @@
 const ev = new EventSource("/events");
 
 // TODO set this when we log in
-const playerInfo = {id: 'w', loc: '2'};
+const playerInfo = { id: 'w', loc: '2' };
 
 const TOKEN_KEY = 'token';
 const PLAYER_KEY = 'player';
 
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
-  handleMsg( e.data);
+  handleMsg(e.data);
 };
 
 /**
@@ -34,64 +34,63 @@ function handleMsg(data) {
     localStorage.setItem(TOKEN_KEY, json.token);
     const id = localStorage.getItem(PLAYER_KEY);
     if (id) {
-      // alreayd logged in so setup player and find their current loc
+      // has logged in before so setup player and find their current loc
     } else {
       showLoginDialog(json);
     }
-  } else if (json.login) {
-    console.log(' the user has logged in');
-  } else if (json.logout) {
-    console.log('the user has logged out');
-  } else if (json.retry) {
-    console.log('retry login');
   } else if (json.msg) {
     // TODO: ensure this player is logged in, otherwise skip this message
     addMessage(json);
   }
   // unhandled msg from server
- 
+
 }
 
 function addMessage(json) {
   const div = document.createElement("div");
   const section = json.top ? '#top' : '#bottom';
   const info = document.querySelector(section);
+
+  // DEBUG: If the user simply includes 'logoff' in the msg then logoff - make a propper command later
+  if (json.msg.includes('logoff')) {
+    localStorage.clear(PLAYER_KEY);
+    localStorage.clear(TOKEN_KEY);
+    showDialog('You have logged off<form><menu><button class="buttonize">Ok</button></menu></form>');
+  }
   
   // grab the current obj and use its loc to update the playerInfo
-
-
   if (json.msg) {
-      // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
-      json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
-          const obj = json.objs?.[id];
-          if (!obj) return match;
+    // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
+    json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
+      const obj = json.objs?.[id];
+      if (!obj) return match;
 
-          const prop = attr || 'longname';
-          let val = obj[prop] !== undefined ? obj[prop] : '';
+      const prop = attr || 'longname';
+      let val = obj[prop] !== undefined ? obj[prop] : '';
 
-          // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
-          if (prop === 'longname' && json.context && id === playerInfo.id) {
-              val = `${obj.name} (you)`;
-          }
+      // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
+      if (prop === 'longname' && json.context && id === playerInfo.id) {
+        val = `${obj.name} (you)`;
+      }
 
-          if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
-            return val;
-          }
+      if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
+        return val;
+      }
 
-          // Format value with styling if colour is defined
-          const color = obj.colour || obj.color;
-          let styled = val;
-          if (color && val !== '') {
-              styled = `<span style="color: ${color}">${val}</span>`;
-          }
+      // Format value with styling if colour is defined
+      const color = obj.colour || obj.color;
+      let styled = val;
+      if (color && val !== '') {
+        styled = `<span style="color: ${color}">${val}</span>`;
+      }
 
-          // Wrap in clickable link if object is linkable
+      // Wrap in clickable link if object is linkable
 
-              return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a>`;
-          return styled;
-      });
+      return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a>`;
+      return styled;
+    });
 
-      json.msg = json.msg.replace(/\s+/g, ' ').trim();
+    json.msg = json.msg.replace(/\s+/g, ' ').trim();
   }
   if (json.msg) {
     div.innerHTML = capitalEachSentence(json.msg);
@@ -154,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let bottomH = available * (1 - splitRatio);
 
     // enforce minimums
-    if (topH < minHeight)    { topH = minHeight;    bottomH = available - minHeight; }
-    if (bottomH < minHeight) { bottomH = minHeight;  topH = available - minHeight; }
+    if (topH < minHeight) { topH = minHeight; bottomH = available - minHeight; }
+    if (bottomH < minHeight) { bottomH = minHeight; topH = available - minHeight; }
 
     top.style.flex = `0 0 ${topH}px`;
     bottom.style.flex = `0 0 ${bottomH}px`;
@@ -217,8 +216,8 @@ function capitalEachSentence(text) {
 // sends a json object to the server and return the json response
 async function fetchJson(type, json) {
   json.token = localStorage.getItem(TOKEN_KEY);
-  const response = await fetch(type, { 
-    method: 'POST', 
+  const response = await fetch(type, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(json),
   });
@@ -241,13 +240,14 @@ function showLoginDialog() {
     <form method="dialog" id="loginform">
     <input type="hidden" name="type" value="login">
       <label for="playername">Your name:</label>
-      <input type="text" id="playername" name="playername" required>
+      <input type="text" id="playername" name="playername" placeholder="Your name in cow" required>
       <label for="pw">Password:</label>
-      <input type="password" id="pw" name="pw" required>
-      <label for="email">Email: (optional for password recovery)</label>
-      <input type="text" id="emial" name="email">
+      <input type="password" id="pw" name="pw" placeholder="Prove your you">
+      <!-- <label for="email">Email:</label>
+      <input type="text" id="email" name="email" placeholder="Optional. For email recovery">
+      -->
       <menu>
-        <button value="submit">Login</button>
+        <button value="submit" class="buttonize">Login</button>
       </menu>
     </form>
   `;
@@ -258,10 +258,17 @@ function showLoginDialog() {
 async function handleForm(data) {
   if (data.type == 'login') {
     const result = await fetchJson('/player', data);
-    closeDialog();
-  } else if ( data.type == 'logoff') { 
-    const result = await fetchJson('/player', data);
-    closeDialog();
+    if (result.id) {
+      console.log(' the user has logged in', result);
+      localStorage.setItem(PLAYER_KEY, result.id);
+      playerInfo.id = result.id;
+      playerInfo.loc = result.loc;
+      addMessage({msg: 'You weke up in cow'});
+      sendCommand('look');
+      closeDialog();
+    } else {
+      alert('Invalid player or password');
+    }
   } else {
     await sendCommand();
   }

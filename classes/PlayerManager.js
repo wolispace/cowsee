@@ -11,11 +11,17 @@ export class PlayerManager {
     request.on('data', chunk => body += chunk);
     request.on('end', () => {
       const data = JSON.parse(body);
-      console.log('form post', data);
-      if (!data) { result.writeHead(401); result.end(); return; }
+      let playerState = {};
+      if (!data) { result.writeHead(401); result.end(); return({type: "empty"}); }
 
       if (data.type == 'login') {
-        this.#sessions[data.token] = data;
+        const obj = this.tickManager.objectManager.findPlayer(data);
+        if (!obj) {
+          playerState = {type: "login"};
+        } else {
+          this.#sessions[data.token] = data;
+          playerState = { type: "login", id: obj.id, playername: obj.name, loc: obj.loc };
+        }
       } else if (data.type == 'logoff') {
 
       } else {
@@ -24,8 +30,7 @@ export class PlayerManager {
       result.writeHead(200, {
         'Content-Type': 'application/json'
       });
-      // DEBUG: auto login as wolis
-      result.end(JSON.stringify({ id: 'w', player: 'wolis' }));
+      result.end(JSON.stringify(playerState));
     });
   }
 

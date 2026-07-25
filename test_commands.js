@@ -4,7 +4,7 @@ import { TickManager } from './classes/TickManager.js';
 const tm = new TickManager(true);
 
 // Helper to send a command
-function sendCommand(cmd, actor = 'w', loc = '2', niceness = 0) {
+function sendCommand(cmd, actor = 'wol', loc = '2', niceness = 0) {
   console.log(`\n>>> Sending command: "${cmd}"`);
   tm.commandManager.add({ cmd, actor, loc, niceness });
   tm.doNext();

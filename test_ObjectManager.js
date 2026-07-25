@@ -64,15 +64,22 @@ found.colour = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 objectManager.save(found);
 
-// add the wolis player id 'w'
-const player = {
-  id: 'w',
+// add the wolis player id 'wol'
+objectManager.save({
+  id: 'wol',
   class: 'player',
   name: 'wolis',
   loc: '2',
   colour: 'goldenrod'
-}
-objectManager.save(player);
+});
+
+objectManager.save({
+  id: 'bob',
+  class: 'player',
+  name: 'Bob',
+  loc: '2',
+  colour: 'yellow'
+});
 
 // save all pools to disk
 objectManager.savePoolsToDisk();
@@ -88,7 +95,7 @@ console.log(testData);
 
 commandManager.context = {
   loc: '2',
-  actor: 'w',
+  actor: 'wol',
   rel: 'on', 
 }
 

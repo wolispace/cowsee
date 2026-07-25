@@ -1,7 +1,7 @@
 # How a player logs in and we keep track of them
 
 ## Front-end
-store a player = {id: 'w', loc: '2'}
+store a player = {id: 'wol', loc: '2'}
 
 Logging in needs to find the player id, and from that its current loc
 

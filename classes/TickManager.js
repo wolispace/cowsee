@@ -8,7 +8,7 @@ import { PlayerManager } from './PlayerManager.js';
 
 export class TickManager {
   interval = 5_000;
-  playerInfo = {id: 'w', loc: '2'};
+  playerInfo = {};
   #isProcessing = false;
 
   constructor(testing = false) {

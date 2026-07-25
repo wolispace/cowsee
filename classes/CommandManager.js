@@ -72,8 +72,8 @@ export class CommandManager extends Queue {
     const { firstword, rest } = this.splitFirstWord(rawCmd);
     // Build execution context
     this.context = {
-      actor: commandObj.actor || 'w',
-      loc: commandObj.loc || '2',
+      actor: commandObj.id,
+      loc: commandObj.loc,
       niceness: commandObj.niceness || 0,
       cmd_text: rest,
       prefix: '',
@@ -227,17 +227,6 @@ export class CommandManager extends Queue {
     return { qty, colour, attribs: attribs.join(' '), class: cls, name };
   }
 
-  /**
-   * Helper to mock target resolution
-   */
-  resolveTarget(targetName, loc) {
-    if (!targetName) return 0;
-    const lowerName = targetName.toLowerCase();
-    if (lowerName === 'everyone' || lowerName === 'all' || lowerName === 'bob' || lowerName === 'wolis') {
-      return 42;
-    }
-    return 0;
-  }
 
   // ------------------------------------------------------------------------------
   // all of the cowmands or statements of a block in cowscript

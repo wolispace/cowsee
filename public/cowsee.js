@@ -2,10 +2,10 @@
 const ev = new EventSource("/events");
 
 // TODO set this when we log in
-const playerInfo = { id: 'w', loc: '2' };
+const playerInfo = { id: 'x', loc: '2' };
 
 const TOKEN_KEY = 'token';
-const PLAYER_KEY = 'player';
+const PLAYER_KEY = 'id';
 
 // When the server sends ANY message (event: message or default)
 ev.onmessage = (e) => {
@@ -35,6 +35,8 @@ function handleMsg(data) {
     const id = localStorage.getItem(PLAYER_KEY);
     if (id) {
       // has logged in before so setup player and find their current loc
+      playerInfo.id = id;
+      wakePlayer();
     } else {
       showLoginDialog(json);
     }
@@ -259,12 +261,10 @@ async function handleForm(data) {
   if (data.type == 'login') {
     const result = await fetchJson('/player', data);
     if (result.id) {
-      console.log(' the user has logged in', result);
       localStorage.setItem(PLAYER_KEY, result.id);
       playerInfo.id = result.id;
       playerInfo.loc = result.loc;
-      addMessage({msg: 'You weke up in cow'});
-      sendCommand('look');
+      wakePlayer();
       closeDialog();
     } else {
       alert('Invalid player or password');
@@ -272,6 +272,11 @@ async function handleForm(data) {
   } else {
     await sendCommand();
   }
+}
+
+function wakePlayer() {
+  addMessage({msg: 'You wake up in cow'});
+  sendCommand('look');
 }
 
 async function sendCommand(cmd) {

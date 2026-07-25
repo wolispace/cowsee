@@ -67,7 +67,6 @@ export class ObjectManager {
    */
   findPlayer(data) {
     const candidates = this.pools.name.get(data.playername);
-    console.log('findPlayer', data, candidates);
     // check all candidates to ensure they are class='player'
     // TODO: worry about password later
     for (const id of candidates) {

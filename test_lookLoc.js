@@ -29,8 +29,8 @@ console.log(`----------- END ----------- ${elapsed}${units}`);
 function runTests() {
   const context = {
     loc: '2',
-    actor: 'w',
-    player: 'w',
+    actor: 'wol',
+    player: 'wol',
   };
 
 

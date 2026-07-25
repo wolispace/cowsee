@@ -8,7 +8,7 @@ const objectManager = tickManager.objectManager;
 const lookManager = tickManager.lookManager;
 const utils = new Utilities();
 
-const addObjects = true;
+const addObjects = false;
 
 console.log('---------------------------- START -------------------------------');
 const start = Date.now();

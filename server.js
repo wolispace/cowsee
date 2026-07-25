@@ -12,7 +12,7 @@ const utils = new Utilities();
 const app = {
   name: 'cowsee',
   port: process.env.PORT || 8899,
-  version: '0.0.2',
+  version: '0.0.3',
   dirname: path.dirname(fileURLToPath(import.meta.url)),
   datapath: '_data',
 };

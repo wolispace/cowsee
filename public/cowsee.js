@@ -70,10 +70,15 @@ function addMessage(json) {
       const prop = attr || 'longname';
       let val = obj[prop] !== undefined ? obj[prop] : '';
 
+      // if (obj.class == 'player') {
+      //   val = obj.name;
+      // }
+
       // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
       if (prop === 'longname' && json.context && id === playerInfo.id) {
         val = `${obj.name} (you)`;
       }
+      
 
       if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
         return val;
@@ -85,11 +90,7 @@ function addMessage(json) {
       if (color && val !== '') {
         styled = `<span style="color: ${color}">${val}</span>`;
       }
-
-      // Wrap in clickable link if object is linkable
-
-      return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a>`;
-      return styled;
+      return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a> <sup>${obj.id}</sup>`;
     });
 
     json.msg = json.msg.replace(/\s+/g, ' ').trim();

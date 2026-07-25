@@ -260,7 +260,7 @@ export class ObjectManager {
       const value = data.context[varName] ?? '';
       const obj = this.getById(value);
       if (obj) {
-        data.objs[value] = { name: obj.name, longname: obj.longname, color: obj.colour, link: true };
+        data.objs[value] = { id: obj.id, name: obj.name, longname: obj.longname, color: obj.colour, link: true };
         return `{${value}}`;
       }
       return value; // fallback: plain text substitution
@@ -299,6 +299,9 @@ export class ObjectManager {
     obj.longname = `${obj.qtyText} ${obj.plural}`;
     if (obj.name) {
       obj.longname += ' called ' + obj.name;
+    }
+    if (obj.class == 'player') {
+      obj.longname = obj.name;
     }
   }
 

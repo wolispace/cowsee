@@ -23,6 +23,7 @@ export class LookManager {
    * @param {object} context 
    */
   list(context) {
+    this.sentences = [];
     this.context = context;
     this.found = this.objectManager.findInLoc(this.context.loc);
     if (this.found.size < 1) {
@@ -44,6 +45,7 @@ export class LookManager {
    * @param {object} context 
    */
   look(context) {
+    this.sentences = [];
     this.context = context;
     this.found = this.objectManager.findInLoc(this.context.loc);
     if (this.found.size < 1) {
@@ -52,11 +54,13 @@ export class LookManager {
     }
     this.objs = this.populateObjs();
     this.hosted = this.buildHosted();
+    // console.log(this.hosted.entries);
     // console.dir(this.hosted, { depth: null, colors: true });
     const unhosted = this.hosted['_'];
     this.recursiveLook(unhosted);
     // console.dir(this.groups, { depth: null, colors: true });
     this.buildSentences();
+    // console.log(this.sentences);
     return this.returnData();
   }
 
@@ -90,6 +94,7 @@ export class LookManager {
       if (!hosted[key][sub][pose]) hosted[key][sub][pose] = [];
 
       hosted[key][sub][pose].push(id);
+      // console.log(key, sub, pose, id);
     }
     return hosted;
   }

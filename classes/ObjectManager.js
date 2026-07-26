@@ -30,6 +30,12 @@ export class ObjectManager {
     }
   }
 
+  dump() {
+    for (const key of this.keys) {
+      console.log(`pool ${key}`, this.pools[key].pool.entries());
+    }
+  }
+
   /**
    * Returns the whole object from a chunked file
    * @param {string} id 

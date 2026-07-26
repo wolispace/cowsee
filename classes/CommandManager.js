@@ -22,6 +22,10 @@ export class CommandManager extends Queue {
     request.on('data', chunk => body += chunk);
     request.on('end', () => {
       const userCommand = JSON.parse(body);
+      // DEBUG:
+      if (userCommand.cmd.includes('dump')) {
+        this.tickManager.objectManager.dump();
+      }
       // userCommand = {actor: 'w', loc: '2', cmd: 'create a small black cat'}
       this.add(userCommand);
       result.writeHead(200, { 'Content-Type': 'application/json' });

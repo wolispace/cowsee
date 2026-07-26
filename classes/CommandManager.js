@@ -508,6 +508,29 @@ export class CommandManager extends Queue {
       this.tickManager.objectManager.savePoolsToDisk();
     },
 
+    // eg: update $new_id to "worth=0, link=$exit, material='_door_', colour='lightgreen'"
+    update: (rest) => {
+      const match = rest.match(/^(\$\w+)\s+(?:to|=)\s+["']?(.+?)["']?$/i);
+      if (!match) return;
+
+      const objId = this.context[match[1].substring(1)];
+      if (!objId) return;
+      const obj = this.tickManager.objectManager.getById(objId);
+      if (!obj) return;
+
+      for (const pair of match[2].split(',')) {
+        const eqIdx = pair.indexOf('=');
+        if (eqIdx === -1) continue;
+        const prop = pair.substring(0, eqIdx).trim();
+        const val = this.resolveValue(pair.substring(eqIdx + 1).trim());
+        obj[prop] = val;
+      }
+
+      this.tickManager.objectManager.save(obj);
+      // DEBUG: quick save here, will do lazy via tickManager
+      this.tickManager.objectManager.savePoolsToDisk();
+    },
+
     clear: (rest) => {
       const match = rest.match(/^(.+)\s*,\s*(.+)$/i);
       const objVar = match[1].substring(1); // $target -> target

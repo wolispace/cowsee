@@ -61,7 +61,7 @@ export class ObjectManager {
    * @returns {set} of IDs with this name
    */
   findByName(key) {
-    const name = key.replace(/^(?:the|an|a)\b/i, '').trim();
+    const name = key.replace(/^(?:the|an|a)\b/i, '').trim().toLocaleLowerCase();
     return this.pools.name.get(name);
   };
 
@@ -72,7 +72,7 @@ export class ObjectManager {
    * @returns {object}
    */
   findPlayer(data) {
-    const candidates = this.pools.name.get(data.playername);
+    const candidates = this.pools.name.get(data.playername.toLocaleLowerCase());
     // check all candidates to ensure they are class='player'
     // TODO: worry about password later
     for (const id of candidates) {

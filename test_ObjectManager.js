@@ -81,6 +81,14 @@ objectManager.save({
   colour: 'yellow'
 });
 
+objectManager.save({
+  id: 'jan',
+  class: 'player',
+  name: 'Jane',
+  loc: '2',
+  colour: 'yellow'
+});
+
 // save all pools to disk
 objectManager.savePoolsToDisk();
 

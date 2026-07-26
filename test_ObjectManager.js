@@ -35,7 +35,7 @@ if (generate) {
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
       colour: randomColour() 
     };
-    obj.info = `It's a pretty ordinary ${obj.class}`;
+   //  obj.info = `It's a pretty ordinary ${obj.class}`;
     objectManager.save(obj);
     if (counter % 100 === 0) {
       process.stdout.write(":");

@@ -93,8 +93,11 @@ export class ObjectManager {
    */
   findByNameInLoc(name, loc) {
     const inName = this.findByName(name);
-    const inLoc = this.findInLoc(loc);
+    if (loc == 'all') {
+      return inName.values().next().value;
+    }
 
+    const inLoc = this.findInLoc(loc);
     for (const key of inLoc) {
       if (inName.has(key)) {
         return key;
@@ -266,7 +269,7 @@ export class ObjectManager {
       const value = data.context[varName] ?? '';
       const obj = this.getById(value);
       if (obj) {
-        data.objs[value] = { id: obj.id, name: obj.name, longname: obj.longname, color: obj.colour, link: true };
+        data.objs[value] = { id: obj.id, loc: obj.loc, name: obj.name, longname: obj.longname, color: obj.colour, link: true };
         return `{${value}}`;
       }
       return value; // fallback: plain text substitution

@@ -6,14 +6,14 @@ const textUtils = new TextUtils();
 const ev = new EventSource("/events");
 
 // TODO set this when we log in
-const playerInfo = { id: 'x', loc: '2' };
+const playerInfo = { id: 'x', loc: 'x' };
 
 const TOKEN_KEY = 'token';
 const PLAYER_KEY = 'id';
 
 // When the server sends ANY message (event: message or default)
-ev.onmessage = (e) => {
-  handleMsg(e.data);
+ev.onmessage = async (e) => {
+  await handleMsg(e.data);
 };
 
 /**
@@ -30,7 +30,7 @@ function setPlayerInfo(info) {
 }
 
 // Helper to append text to the .info section
-function handleMsg(data) {
+async function handleMsg(data) {
   const json = JSON.parse(data);
   console.log(json);
   if (json.token) {
@@ -38,14 +38,26 @@ function handleMsg(data) {
     localStorage.setItem(TOKEN_KEY, json.token);
     const id = localStorage.getItem(PLAYER_KEY);
     if (id) {
+      json.type = 'return';
+      json.id = id;
       // has logged in before so setup player and find their current loc
-      playerInfo.id = id;
+      const result = await fetchJson('/player', json);
+      playerInfo.id = result.id;
+      playerInfo.loc = result.loc;
+      console.log({playerInfo}, result);
       wakePlayer();
     } else {
       showLoginDialog(json);
     }
   } else if (json.msg) {
     // TODO: ensure this player is logged in, otherwise skip this message
+    // alugn this playerInfo with the last msg they performed an their new loc
+    if (json.context.actor == playerInfo.id) {
+      playerInfo.loc = json.objs[playerInfo.id].loc;     
+    }
+    // dont show messages not for this location
+    if (playerInfo.loc != json.context.loc) return;
+
     addMessage(json);
   }
   // unhandled msg from server
@@ -157,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       newBottomH = minHeight;
       newTopH = startTopH + startBottomH - minHeight;
     }
-    newBottomH -= input.getBoundingClientRect().height;
+    newBottomH -= input.getBoundingClientRect().height * 1.3;
 
     top.style.flex = `0 0 ${newTopH}px`;
     bottom.style.flex = `0 0 ${newBottomH}px`;

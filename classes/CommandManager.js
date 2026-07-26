@@ -267,8 +267,8 @@ export class CommandManager extends Queue {
         getLocValue = this.resolveValue(locParts[0]);
         getSecondLocValue = locParts[1] ? this.resolveValue(locParts[1]) : getLocValue;
       } else {
-        // Default to actor's current room
-        getLocValue = this.context.loc || '';
+        // Default to looking everywhere
+        getLocValue = 'all';
         getSecondLocValue = getLocValue;
       }
 
@@ -361,13 +361,14 @@ export class CommandManager extends Queue {
           this.context[varName(getBits[0])] = part1;
           this.context[varName(getBits[1])] = relPart;
           this.context[varName(getBits[2])] = part3;
-          console.log(splitMatch, this.context);
+          //console.log(splitMatch, this.context);
         } else {
           // No rel word found — put everything in the first variable
           this.context[varName(getBits[0])] = cmdText;
           this.context[varName(getBits[1])] = '';
           this.context[varName(getBits[2])] = '';
         }
+        console.log(this.context);
       }
 
       // --- Step 7: Resolve objects (like perl's get_resolve) ---

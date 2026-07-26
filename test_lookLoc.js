@@ -1,12 +1,14 @@
 import { Utilities } from './classes/Utilities.js';
 import { TickManager } from './classes/TickManager.js';
 import { LookManager } from './classes/LookManager.js';
+import { TextUtils } from './public/TextUtils.js';
 
 
 const tickManager = new TickManager(true);
 const objectManager = tickManager.objectManager;
 const lookManager = tickManager.lookManager;
 const utils = new Utilities();
+const textUtils = new TextUtils();
 
 const addObjects = false;
 
@@ -41,7 +43,8 @@ function runTests() {
 
   console.log('\n--- Running lookManager.look() ---');
   const data = lookManager.look(context);
-  const msg = utils.interpolate(data, true);
+  data.playerId = context.actor;
+  const msg = utils.interpolate(data, 'text');
 
   //tickManager.messageManager.add(data);
   console.log(msg);

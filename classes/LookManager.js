@@ -46,6 +46,9 @@ export class LookManager {
    */
   look(context) {
     this.sentences = [];
+    this.seen = new Set();
+    this.groups = new SetMap();
+    this.sentenceCounter = 0;
     this.context = context;
     this.found = this.objectManager.findInLoc(this.context.loc);
     if (this.found.size < 1) {

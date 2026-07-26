@@ -1,3 +1,7 @@
+import { TextUtils } from './TextUtils.js';
+
+const textUtils = new TextUtils();
+
 // Connect to your SSE endpoint
 const ev = new EventSource("/events");
 
@@ -59,50 +63,16 @@ function addMessage(json) {
     localStorage.clear(TOKEN_KEY);
     showDialog('You have logged off<form><menu><button class="buttonize">Ok</button></menu></form>');
   }
-  
-  // grab the current obj and use its loc to update the playerInfo
+  json.playerId = playerInfo.id;
+  json.msg = textUtils.expand(json);
+
   if (json.msg) {
-    // Interpolate object templates: {ID} (defaults to longname) or {ID.attribute}
-    json.msg = json.msg.replace(/\{(\w+)(?:\.(\w+))?\}/g, (match, id, attr) => {
-      const obj = json.objs?.[id];
-      if (!obj) return match;
-
-      const prop = attr || 'longname';
-      let val = obj[prop] !== undefined ? obj[prop] : '';
-
-      // if (obj.class == 'player') {
-      //   val = obj.name;
-      // }
-
-      // Special handling if the player/actor matches the object ID (e.g. 'w' -> wolis)
-      if (prop === 'longname' && json.context && id === playerInfo.id) {
-        val = `${obj.name} (you)`;
-      }
-      
-
-      if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
-        return val;
-      }
-
-      // Format value with styling if colour is defined
-      const color = obj.colour || obj.color;
-      let styled = val;
-      if (color && val !== '') {
-        styled = `<span style="color: ${color}">${val}</span>`;
-      }
-      return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val}">${styled}</a> <sup>${obj.id}</sup>`;
-    });
-
-    json.msg = json.msg.replace(/\s+/g, ' ').trim();
-  }
-  if (json.msg) {
-    div.innerHTML = capitalEachSentence(json.msg);
+    div.innerHTML = json.msg;
     if (json.top) {
       info.replaceChildren(div);
       // auto-scroll top for new look around
       // TODO: only scroll if the current scroll position is at the bottom before appending the content
       info.scrollTop = 0;
-
     } else {
       info.appendChild(div);
       // auto-scroll bottom to newest content
@@ -211,10 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dragging) applySplitRatio();
   }).observe(panels);
 });
-
-function capitalEachSentence(text) {
-  return text.replace(/\.\s+([a-z])/g, (_, letter) => `. ${letter.toUpperCase()}`);
-}
 
 // sends a json object to the server and return the json response
 async function fetchJson(type, json) {

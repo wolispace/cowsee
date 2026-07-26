@@ -85,7 +85,7 @@ objectManager.save({
   id: 'jan',
   class: 'player',
   name: 'Jane',
-  loc: '2',
+  loc: '3',
   colour: 'yellow'
 });
 

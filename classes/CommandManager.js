@@ -397,7 +397,7 @@ export class CommandManager extends Queue {
           this.context.second = nsecond; // keep raw text if no object found
         }
       }
-      console.log('final', this.context);
+      // console.log('final', this.context);
     },
 
     // IF/THEN/ELSE handler
@@ -462,6 +462,7 @@ export class CommandManager extends Queue {
       } else {
         this.context[varName] = this.resolveValue(rawVal);
       }
+      //console.log(`var`, varName, rawVal, this.context[varName]);
     },
 
     /*
@@ -539,22 +540,15 @@ export class CommandManager extends Queue {
 
       this.tickManager.messageManager.add({
         msg,
-        context: this.context
+        context: { ...this.context }
       });
     },
 
     relook: (rest) => {
-      this.context.loc = this.resolveValue(rest.trim());
-      const data = this.tickManager.objectManager.lookLoc(this.context);
+      const loc = this.resolveValue(rest.trim());
+      this.context.loc = loc;
+      const data = this.tickManager.objectManager.lookLoc({ ...this.context });
       this.tickManager.messageManager.add(data);
-      // // TODO: this "force" should queue up a new command from the 'actor' to 'look'
-      // this.tickManager.messageManager.add({
-
-      //   msg: `force:look ${loc}`,
-      //   actor: this.context.actor,
-      //   loc: loc,
-      //   context: this.context
-      // });
     },
 
     new: (rest) => {

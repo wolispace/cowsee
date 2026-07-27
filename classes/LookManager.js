@@ -23,9 +23,11 @@ export class LookManager {
    * @param {object} context 
    */
   list(context) {
-    this.sentences = [];
     this.context = context;
-    this.found = this.objectManager.findInLoc(this.context.loc);
+    const loc = this.objectManager.getById(this.context.loc);
+    this.found = this.objectManager.findInLoc(loc.id);
+    this.context.objs.push[loc];
+    this.sentences = [`You are ${inon} ${obj.id}</div><div>`];
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
       return this.returnData();
@@ -45,17 +47,29 @@ export class LookManager {
    * @param {object} context 
    */
   look(context) {
-    this.sentences = [];
     this.seen = new Set();
     this.groups = new SetMap();
     this.sentenceCounter = 0;
     this.context = context;
-    this.found = this.objectManager.findInLoc(this.context.loc);
+    this.sentences = [];
+    if (!this.context.loc) {
+      console.log('look failed as we are nowhere', context);
+      this.sentences.push('You are nowhere');
+      return this.returnData();
+    }
+    let loc = this.objectManager.getById(this.context.loc);
+    if (!loc) {
+      loc = this.objectManager.getById(0);
+    }
+    this.found = this.objectManager.findInLoc(loc.id);
+    const inon = 'in';
+    this.sentences = [`You are ${inon} {${loc.id}}`];
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
       return this.returnData();
     }
     this.objs = this.populateObjs();
+    this.objs[loc.id] = loc;
     this.hosted = this.buildHosted();
     // console.log(this.hosted.entries);
     // console.dir(this.hosted, { depth: null, colors: true });
@@ -134,7 +148,6 @@ export class LookManager {
    * Format sentences as replaceable params for display 
    */
   buildSentences() {
-    this.sentences = [];
     let sentenceCount = 0;
     let lastHost = '';
     for (const [key, ids] of this.groups.map) {

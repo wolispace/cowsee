@@ -224,8 +224,10 @@ export class ObjectManager {
     }
     this.formatObject(obj);
     this.pools.id.set(obj.id, obj, null, true);
-    this.pools.name.set(obj.name, obj.id);
-    this.pools.name.set(obj.class, obj.id);
+    if (obj.name) {
+      this.pools.name.set(obj.name.toLocaleLowerCase(), obj.id);
+    }
+    this.pools.name.set(obj.class.toLocaleLowerCase(), obj.id);
     this.pools.loc.set(obj.loc, obj.id);
   }
 

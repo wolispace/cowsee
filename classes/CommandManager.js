@@ -368,7 +368,7 @@ export class CommandManager extends Queue {
           this.context[varName(getBits[1])] = '';
           this.context[varName(getBits[2])] = '';
         }
-        console.log(this.context);
+        //console.log(this.context);
       }
 
       // --- Step 7: Resolve objects (like perl's get_resolve) ---
@@ -501,6 +501,7 @@ export class CommandManager extends Queue {
       // Resolve the value (handles $vars and quoted strings)
       const val = this.resolveValue(rawVal);
       obj[prop] = val;
+      //console.log('set ', rawVal, val, this.context);
 
       // Save the updated object
       this.tickManager.objectManager.save(obj);

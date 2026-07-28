@@ -12,9 +12,9 @@ const start = Date.now();
 const obj = {id: 'A', class:'book', qty: 1, loc: 'B'};
 tickManager.objectManager.addToPools(obj);
 
-commandManager.context = {target: 'A', exit: 'C'};
+commandManager.context = {target: 'A', exit: 'C', newloc: 'Z'};
 
-const statement = `update $target to "worth=0, link=$exit, material='_door_', colour='lightgreen'";`;
+const statement = `update $target to "loc=$newloc, link=$exit, material='_door_', colour='lightgreen'";`;
 
 commandManager.executeStatement(statement);
 

@@ -68,6 +68,7 @@ export class CommandManager extends Queue {
    * @param {object} commandObj { cmd: "say hello everyone", actor: "w", loc: "A", niceness: 0 }
    */
   parse(commandObj) {
+    console.log({commandObj});
     // reset reactions after a human sends something
     this.tickManager.objectManager.reactions = 0;
     const rawCmd = commandObj.cmd;
@@ -519,6 +520,7 @@ export class CommandManager extends Queue {
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
 
+      const oldObj = {... obj};
       for (const pair of match[2].split(',')) {
         const eqIdx = pair.indexOf('=');
         if (eqIdx === -1) continue;
@@ -527,7 +529,7 @@ export class CommandManager extends Queue {
         obj[prop] = val;
       }
 
-      this.tickManager.objectManager.save(obj);
+      this.tickManager.objectManager.save(obj, oldObj);
       // DEBUG: quick save here, will do lazy via tickManager
       this.tickManager.objectManager.savePoolsToDisk();
     },

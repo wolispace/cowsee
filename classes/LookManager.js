@@ -27,7 +27,8 @@ export class LookManager {
     const loc = this.objectManager.getById(this.context.loc);
     this.found = this.objectManager.findInLoc(loc.id);
     this.context.objs.push[loc];
-    this.sentences = [`You are ${inon} ${obj.id}</div><div>`];
+    const inon = 'in';
+    this.sentences = [`You are ${inon} ${obj.id}`];
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
       return this.returnData();
@@ -53,7 +54,7 @@ export class LookManager {
     this.context = context;
     this.sentences = [];
     if (!this.context.loc) {
-      console.log('look failed as we are nowhere', context);
+      console.log('There is nothing to see as you are nowhere', context);
       this.sentences.push('You are nowhere');
       return this.returnData();
     }
@@ -62,6 +63,7 @@ export class LookManager {
       loc = this.objectManager.getById(0);
     }
     this.found = this.objectManager.findInLoc(loc.id);
+    console.log(`found in ${loc.id}`, this.found);
     const inon = 'in';
     this.sentences = [`You are ${inon} {${loc.id}}`];
     if (this.found.size < 1) {
@@ -111,7 +113,7 @@ export class LookManager {
       if (!hosted[key][sub][pose]) hosted[key][sub][pose] = [];
 
       hosted[key][sub][pose].push(id);
-      // console.log(key, sub, pose, id);
+      console.log(key, sub, pose, id);
     }
     return hosted;
   }
@@ -168,7 +170,7 @@ export class LookManager {
       for (const id of ids) {
         const sub = this.objs[id];
         delim = (ids.size > 1 && objCounter++ >= ids.size) ? ' and ' : delim;
-        let objName = sub.class == 'player' ? `player called {${id}}` : `{${id}.plural}`;
+        let objName = ['player','command'].includes(sub.class) ? `${sub.class} called {${id}}` : `{${id}.plural}`;
         let descObj = `{${id}.pose} {${id}}`;
         descObj = `{${id}.qtyText} {${id}.pose} ${objName}`;
         sentence += `${delim}${descObj}`;

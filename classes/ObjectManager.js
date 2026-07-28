@@ -44,7 +44,8 @@ export class ObjectManager {
   getById(id) {
     const set = this.pools.id.get(id);
     if (!set || set.size === 0) return undefined;
-    return set.values().next().value;
+    const obj = set.values().next().value;
+    return obj;
   };
 
   getFormattedById(id) {
@@ -203,16 +204,22 @@ export class ObjectManager {
   /**
    * Saves changes (back to the pool which eventually end up on disk)
    * @param {object} obj 
+   * @param {object} old 
    */
-  save(obj) {
-    this.addToPools(obj);
+  save(obj, old) {
+    this.addToPools(obj, old);
   }
 
   /**
-   * Add the object to all of the pools
+   * Add the object to all of the pools updaing and old pools
    * @param {obj} obj 
+   * @param {object} old 
    */
-  addToPools(obj) {
+  addToPools(obj, old) {
+    // if there is already an obj, we maybe changing existing values like its loc from one to another
+    // so clear from all pools
+
+
     if (obj.code) {
       this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code }, null, true);
       this.addTriggers(obj);
@@ -228,7 +235,7 @@ export class ObjectManager {
       this.pools.name.set(obj.name.toLocaleLowerCase(), obj.id);
     }
     this.pools.name.set(obj.class.toLocaleLowerCase(), obj.id);
-    this.pools.loc.set(obj.loc, obj.id);
+    this.pools.loc.set(obj.loc, obj.id, old?.loc);
   }
 
   /**
@@ -311,7 +318,7 @@ export class ObjectManager {
     if (obj.name) {
       obj.longname += ' called ' + obj.name;
     }
-    if (obj.class == 'player') {
+    if (['player','command'].includes(obj.class)) {
       obj.longname = obj.name;
     }
   }

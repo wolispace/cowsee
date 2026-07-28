@@ -9,10 +9,11 @@ const utils = new Utilities();
 
 const objectManager = tickManager.objectManager;
 const commandManager = tickManager.commandManager;
+const lookManager = tickManager.lookManager;
 const pools = objectManager.pools;
 
 const generate = true;
-const max = 50; // 50 so we dont stomp over the commands with test records
+const max = 5; // 50 so we dont stomp over the commands with test records
 const cleanup = generate;
 const addCode = generate;
 
@@ -45,6 +46,7 @@ if (generate) {
 
 if (addCode) {
   initCommands();
+  initPlayers();
 }
 
 // manual tinker
@@ -64,68 +66,69 @@ found.colour = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 objectManager.save(found);
 
-// add the wolis player id 'wol'
-objectManager.save({
-  id: 'wol',
-  class: 'player',
-  name: 'wolis',
-  loc: '2',
-  colour: 'goldenrod'
-});
-
-objectManager.save({
-  id: 'bob',
-  class: 'player',
-  name: 'Bob',
-  loc: '2',
-  colour: 'yellow'
-});
-
-objectManager.save({
-  id: 'jan',
-  class: 'player',
-  name: 'Jane',
-  loc: '3',
-  colour: 'yellow'
-});
-
 // save all pools to disk
 objectManager.savePoolsToDisk();
 
-const list = objectManager.findByName('pen');
-console.log('find all pens by name', list);
+// const list = objectManager.findByName('pen');
+// console.log('find all pens by name', list);
 
-const codeText1 = objectManager.getCode(found.id);
-console.log('get the code form found', codeText1);
+// const codeText1 = objectManager.getCode(found.id);
+// console.log('get the code form found', codeText1);
 
-const testData = objectManager.lookLoc(commandManager.context);
-console.log(testData);
+// const testData = objectManager.lookLoc(commandManager.context);
+// console.log(testData);
 
-commandManager.context = {
-  loc: '2',
-  actor: 'wol',
-  rel: 'on', 
-}
+// commandManager.context = {
+//   loc: '2',
+//   actor: 'wol',
+//   rel: 'on', 
+// }
 
-let variable = `"$rel"`;
-let result = commandManager.resolveValue(variable);
-console.log(`::: ${variable} = '${result}'`);
+// let variable = `"$rel"`;
+// let result = commandManager.resolveValue(variable);
+// console.log(`::: ${variable} = '${result}'`);
 
-const codeText2 = objectManager.findCommand('say', commandManager.context);
-// console.log('find a command ', codeText2);
+// const codeText2 = objectManager.findCommand('say', commandManager.context);
+// // console.log('find a command ', codeText2);
 
-const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
-console.log({foundByNameInLoc});
+// const foundByNameInLoc = objectManager.findByNameInLoc('the box', '2');
+// console.log({foundByNameInLoc});
 
-found = objectManager.getById('3');
-console.log('found again', found);
-found.info = 'This is a brilliant cat';
-found.pocket = '6',
-found.colour = 'tomato',
-found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
-`say 'think',"[$actor] .oO( $text )"`
-objectManager.save(found);
+// found = objectManager.getById('3');
+// console.log('found again', found);
+// found.info = 'This is a brilliant cat';
+// found.pocket = '6',
+// found.colour = 'tomato',
+// found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
+// `say 'think',"[$actor] .oO( $text )"`
+// objectManager.save(found);
 
+// build a location and test its built properly
+const player = objectManager.findPlayer({playername: 'wolis'});
+const context = {
+  loc: player.loc,
+  actor: player.id,
+  player: player.id,
+};
+
+commandManager.add({ cmd: 'build a shed', actor: context.actor, loc: context.loc });
+tickManager.doNext();
+
+const shedObjs = objectManager.findByName('shed');
+const shedObjId = shedObjs.values().next().value;
+const shedObj = objectManager.getById(shedObjId);
+const inLoc = objectManager.findInLoc(context.loc);
+const inShed = objectManager.findInLoc(shedObjId);
+console.log('shed', shedObj, inLoc, inShed);
+
+
+const data = lookManager.look(context);
+data.playerId = context.actor;
+const msg = utils.interpolate(data, 'text');
+//tickManager.messageManager.add(data);
+console.log(msg);
+
+// save after any manual changes..
 objectManager.savePoolsToDisk();
 
 // ---
@@ -144,6 +147,25 @@ function deleteTestFiles() {
     if (file.startsWith("index") && file.endsWith(".json")) {
       fs.rmSync(path.join(dir, file), { force: true });
     }
+  }
+}
+
+function initPlayers() {
+
+  const players = [
+    {loc: '2', name: 'Wolis'},
+    {loc: '2', name: 'Bob'},
+    {loc: '3', name: 'Jane'},
+  ];
+
+  for (const player of players) {
+    const obj = {};
+    obj.id = objectManager.idManager.new();
+    obj.loc = player.loc;
+    obj.name = player.name;
+    obj.class = 'player',
+    obj.color = 'goldenrod',
+    objectManager.save(obj);
   }
 }
 
@@ -181,6 +203,9 @@ function initCommands() {
   },{
     name: "flush",
     code: `flush;say 'flush',"[$actor] flushed the pools";`
+  },{
+    name: "build",
+    code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, colour='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', colour='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
   }
 ];
 

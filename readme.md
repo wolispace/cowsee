@@ -8,7 +8,7 @@ A Server Side Events version of COW
 - maybe run a copy of the old world (daily reset in case people break stuff)
 
 ## Data structure
-- All indexes and current object data is stored in memory with a debounce to save when idle
+- current indexes and current object data are stored in memory with a debounce to save when idle, and load from disk if not already in a memory pool
 - Object files will get big so save in id-based chunks (objects_0_9999.json, objects_10000_19999.json)
 - Index key concepts like location.json and trigger.json as simple id: [id, id2 ...]
   - location = {"45":[1,2,9..], "9":[..]}

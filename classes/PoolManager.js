@@ -65,16 +65,25 @@ export class PoolManager {
       // 1:1 mapping: replace entirely with a single-element Set
       this.pool.replace(key, new Set([thing]));
     } else {
+      if (!this.pool.has(key)) {
+        this.get(key);
+      }
       this.pool.add(key, thing);
     }
     this.buckets[this.currentBucket].add(key);
     this.dirtyUpdated.add(key);
     // remove from the previous key eg was in loc:A now in loc:B
     // if loc is empty then flag it as deleted
-    if (!oldKey) return;
+    if (!oldKey || oldKey === key) return;
+    if (!this.pool.has(oldKey)) {
+      this.get(oldKey);
+    }
     const isEmpty = this.pool.deleteValue(oldKey, thing);
     if (isEmpty) {
+      console.log(`delete old loc=${oldKey} id=${thing} isEmpty=`, isEmpty);
       this.dirtyDeleted.add(oldKey);
+    } else {
+      this.dirtyUpdated.add(oldKey);
     }
   }
 
@@ -166,20 +175,7 @@ export class PoolManager {
         if (poolValue instanceof Set) {
           poolValue = [...poolValue]; // convert into an array
         }
-        // Merge if diskValue exists
-        const diskValue = json[key];
-        let merged;
-        // If the pool holds a single object (1:1 override pattern like the id pool),
-        // always overwrite — never merge from disk, since Set dedup doesn't work
-        // on deserialized object references.
-        if (poolValue.length === 1 && typeof poolValue[0] === 'object') {
-          merged = poolValue;
-        } else if (Array.isArray(diskValue)) {
-          merged = [...new Set([...diskValue, ...poolValue])];
-        } else {
-          merged = poolValue;
-        }
-        json[key] = merged;
+        json[key] = poolValue;
         // refresh pool with this content..
         const item = new Set(json?.[key] ?? undefined);
         // Cache it, add it to decay cache bucket, then return it

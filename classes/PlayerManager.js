@@ -16,6 +16,7 @@ export class PlayerManager {
 
       if (data.type == 'return') {
         const obj = this.tickManager.objectManager.getById(data.id);
+        console.log(`get data.id`, data.id, obj);
          playerState = { type: "return", id: obj.id, playername: obj.name, loc: obj.loc };
       } else if (data.type == 'login') {
         const obj = this.tickManager.objectManager.findPlayer(data);

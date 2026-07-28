@@ -67,7 +67,7 @@ export class LookManager {
       this.objectManager.formatObject(loc);
     }
     this.found = this.objectManager.findInLoc(loc.id);
-    console.log(`found in ${loc.id}`, this.found);
+    // console.log(`found in ${loc.id}`, this.found);
     const inon = 'in';
     this.sentences = [`You are ${inon} {${loc.id}}`];
     if (!this.found || this.found.size < 1) {
@@ -120,7 +120,7 @@ export class LookManager {
       if (!hosted[key][sub][pose]) hosted[key][sub][pose] = [];
 
       hosted[key][sub][pose].push(id);
-      console.log(key, sub, pose, id);
+      // console.log(key, sub, pose, id);
     }
     return hosted;
   }

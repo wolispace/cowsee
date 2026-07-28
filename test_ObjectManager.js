@@ -117,13 +117,17 @@ tickManager.doNext();
 const shedObjs = objectManager.findByName('shed');
 const shedObjId = shedObjs.values().next().value;
 const shedObj = objectManager.getById(shedObjId);
-const inLoc = objectManager.findInLoc(context.loc);
-const inShed = objectManager.findInLoc(shedObjId);
-console.log('shed', shedObj, inLoc, inShed);
+let inLoc = objectManager.findInLoc(context.loc);
+let inShed = objectManager.findInLoc(shedObjId);
+console.log(inLoc, inShed);
 showLookMsg(context);
 
 commandManager.add({ cmd: 'go shed', actor: context.actor, loc: context.loc });
 tickManager.doNext();
+showLookMsg(context);
+inLoc = objectManager.findInLoc(context.loc);
+inShed = objectManager.findInLoc(shedObjId);
+console.log(inLoc, inShed);
 context.loc = shedObjId;
 showLookMsg(context);
 
@@ -208,7 +212,7 @@ function initCommands() {
     code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nrelook $loc;`
   },{
     name: "go",
-    code: `get $target in $loc;\nvar $tlink to $target's link;\nsay 'leaves',\"[$actor] leaves via [$target]\";\nvar $loc to $tlink's loc;\nset $actor's loc to $loc;\nsay 'arrives',\"[$actor] appears through [$tlink]\";\nrelook $loc;`
+    code: `get $target in $loc;\nvar $tlink to $target's link;\nsay 'leaves',\"[$actor] leaves via [$target]\";\nvar $loc to $tlink's loc;\nset $actor's loc to $loc;\nsay 'arrives',\"[$actor] appears via [$tlink]\";\nrelook $loc;`
   },{
     name: "flush",
     code: `flush;say 'flush',"[$actor] flushed the pools";`

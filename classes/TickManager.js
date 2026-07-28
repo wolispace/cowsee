@@ -12,6 +12,7 @@ export class TickManager {
   #isProcessing = false;
 
   constructor(testing = false) {
+    this.testing = testing;
     this.commandManager = new CommandManager(this);
     this.messageManager = new MessageManager(this);
     this.fileManager = new FileManager(this);
@@ -30,6 +31,20 @@ export class TickManager {
   }
 
   #process() {
+    if (this.testing) {
+      while (this.commandManager.pending() || this.messageManager.pending()) {
+        if (this.commandManager.pending()) {
+          this.commandManager.doNext();
+        } else if (this.messageManager.pending()) {
+          const payload = this.messageManager.get();
+          this.messageManager.send(payload);
+        }
+      }
+      this.#isProcessing = false;
+      this.objectManager.savePoolsToDisk();
+      return;
+    }
+
     // Process one command if available
     if (this.commandManager.pending()) {
       this.commandManager.doNext();

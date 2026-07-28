@@ -8,7 +8,7 @@ export class CommandManager extends Queue {
 
   subs = {};
   context = {}; // the context the statement is run agains (which actor which location etc..)
-  relWords='at|as|to|on|in|near|far from|far away from|away from|under|between|above|around|encompassing|beside|behind|leaning against|next to|through|against|with|by|over|across|facing|leaning|looking|leading|heading|pointing|going|running|to the|north|east|west|south|up|down|from|off';
+  relWords = 'at|as|to|on|in|near|far from|far away from|away from|under|between|above|around|encompassing|beside|behind|leaning against|next to|through|against|with|by|over|across|facing|leaning|looking|leading|heading|pointing|going|running|to the|north|east|west|south|up|down|from|off';
 
   constructor(tickManager) {
     super();
@@ -68,7 +68,7 @@ export class CommandManager extends Queue {
    * @param {object} commandObj { cmd: "say hello everyone", actor: "w", loc: "A", niceness: 0 }
    */
   parse(commandObj) {
-    console.log({commandObj});
+    //console.log({commandObj});
     // reset reactions after a human sends something
     this.tickManager.objectManager.reactions = 0;
     const rawCmd = commandObj.cmd;
@@ -77,7 +77,7 @@ export class CommandManager extends Queue {
     const { firstword, rest } = this.splitFirstWord(rawCmd);
     // Build execution context
     this.context = {
-      actor: commandObj.id,
+      actor: commandObj.actor || commandObj.id,
       loc: commandObj.loc,
       niceness: commandObj.niceness || 0,
       cmd_text: rest,
@@ -291,7 +291,7 @@ export class CommandManager extends Queue {
       // Helper: determine if a bit is a quoted literal (e.g., "as", "to")
       const isQuotedLiteral = (bit) => {
         return (bit.startsWith('"') && bit.endsWith('"')) ||
-               (bit.startsWith("'") && bit.endsWith("'"));
+          (bit.startsWith("'") && bit.endsWith("'"));
       };
 
       // Helper: strip $ from variable name
@@ -520,7 +520,7 @@ export class CommandManager extends Queue {
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
 
-      const oldObj = {... obj};
+      const oldObj = { ...obj };
       for (const pair of match[2].split(',')) {
         const eqIdx = pair.indexOf('=');
         if (eqIdx === -1) continue;

@@ -120,8 +120,10 @@ const shedObj = objectManager.getById(shedObjId);
 const inLoc = objectManager.findInLoc(context.loc);
 const inShed = objectManager.findInLoc(shedObjId);
 console.log('shed', shedObj, inLoc, inShed);
-
 showLookMsg(context);
+
+commandManager.add({ cmd: 'go shed', actor: context.actor, loc: context.loc });
+tickManager.doNext();
 context.loc = shedObjId;
 showLookMsg(context);
 
@@ -157,14 +159,14 @@ function showLookMsg(context) {
 
 function initPlayers() {
   const players = [
-    {loc: '2', name: 'Wolis'},
-    {loc: '2', name: 'Bob'},
-    {loc: '3', name: 'Jane'},
+    {loc: '2', name: 'Wolis', id: 'wol'},
+    {loc: '2', name: 'Bob', id: 'bob'},
+    {loc: '3', name: 'Jane', id: 'jan'},
   ];
 
   for (const player of players) {
     const obj = {};
-    obj.id = objectManager.idManager.new();
+    obj.id = player.id;
     obj.loc = player.loc;
     obj.name = player.name;
     obj.class = 'player',
@@ -204,6 +206,9 @@ function initCommands() {
   },{
     name: "goto",
     code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nrelook $loc;`
+  },{
+    name: "go",
+    code: `get $target in $loc;\nvar $tlink to $target's link;\nsay 'leaves',\"[$actor] leaves via [$target]\";\nvar $loc to $tlink's loc;\nset $actor's loc to $loc;\nsay 'arrives',\"[$actor] appears through [$tlink]\";\nrelook $loc;`
   },{
     name: "flush",
     code: `flush;say 'flush',"[$actor] flushed the pools";`

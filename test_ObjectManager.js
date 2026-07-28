@@ -121,12 +121,9 @@ const inLoc = objectManager.findInLoc(context.loc);
 const inShed = objectManager.findInLoc(shedObjId);
 console.log('shed', shedObj, inLoc, inShed);
 
-
-const data = lookManager.look(context);
-data.playerId = context.actor;
-const msg = utils.interpolate(data, 'text');
-//tickManager.messageManager.add(data);
-console.log(msg);
+showLookMsg(context);
+context.loc = shedObjId;
+showLookMsg(context);
 
 // save after any manual changes..
 objectManager.savePoolsToDisk();
@@ -150,8 +147,15 @@ function deleteTestFiles() {
   }
 }
 
-function initPlayers() {
+function showLookMsg(context) {
+  const data = lookManager.look(context);
+  data.playerId = context.actor;
+  const msg = utils.interpolate(data, 'text');
+  //tickManager.messageManager.add(data);
+  console.log(msg);
+}
 
+function initPlayers() {
   const players = [
     {loc: '2', name: 'Wolis'},
     {loc: '2', name: 'Bob'},

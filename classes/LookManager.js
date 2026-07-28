@@ -53,6 +53,7 @@ export class LookManager {
     this.sentenceCounter = 0;
     this.context = context;
     this.sentences = [];
+    this.objs = {};
     if (!this.context.loc) {
       console.log('There is nothing to see as you are nowhere', context);
       this.sentences.push('You are nowhere');
@@ -62,23 +63,29 @@ export class LookManager {
     if (!loc) {
       loc = this.objectManager.getById(0);
     }
+    if (loc) {
+      this.objectManager.formatObject(loc);
+    }
     this.found = this.objectManager.findInLoc(loc.id);
     console.log(`found in ${loc.id}`, this.found);
     const inon = 'in';
     this.sentences = [`You are ${inon} {${loc.id}}`];
-    if (this.found.size < 1) {
+    if (!this.found || this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
+      if (loc) this.objs[loc.id] = loc;
       return this.returnData();
     }
     this.objs = this.populateObjs();
-    this.objs[loc.id] = loc;
     this.hosted = this.buildHosted();
     // console.log(this.hosted.entries);
     // console.dir(this.hosted, { depth: null, colors: true });
     const unhosted = this.hosted['_'];
-    this.recursiveLook(unhosted);
+    if (unhosted) {
+      this.recursiveLook(unhosted);
+    }
     // console.dir(this.groups, { depth: null, colors: true });
     this.buildSentences();
+    if (loc) this.objs[loc.id] = loc;
     // console.log(this.sentences);
     return this.returnData();
   }

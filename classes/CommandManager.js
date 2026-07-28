@@ -499,13 +499,14 @@ export class CommandManager extends Queue {
       const obj = this.tickManager.objectManager.getById(objId);
       if (!obj) return;
 
+      const oldObj = { ...obj };
+
       // Resolve the value (handles $vars and quoted strings)
       const val = this.resolveValue(rawVal);
       obj[prop] = val;
-      //console.log('set ', rawVal, val, this.context);
 
       // Save the updated object
-      this.tickManager.objectManager.save(obj);
+      this.tickManager.objectManager.save(obj, oldObj);
       // DEBUG: until we have tick manager handling save to disk.
       this.tickManager.objectManager.savePoolsToDisk();
     },

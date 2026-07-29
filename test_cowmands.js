@@ -14,7 +14,7 @@ tickManager.objectManager.addToPools(obj);
 
 commandManager.context = {target: 'A', exit: 'C', newloc: 'Z'};
 
-const statement = `update $target to "loc=$newloc, link=$exit, material='_door_', colour='lightgreen'";`;
+const statement = `update $target to "loc=$newloc, link=$exit, material='_door_', color='lightgreen'";`;
 
 commandManager.executeStatement(statement);
 

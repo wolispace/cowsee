@@ -122,7 +122,7 @@ export class ObjectManager {
 
   findMatchInLoc(obj, context) {
     // TODO: for creating a new object that merges with an existing
-    // loop through all objects in the location and if they match the obj.class, obj.colour etc..
+    // loop through all objects in the location and if they match the obj.class, obj.color etc..
     // then return it else return null
   }
 
@@ -278,7 +278,7 @@ export class ObjectManager {
       const value = data.context[varName] ?? '';
       const obj = this.getById(value);
       if (obj) {
-        data.objs[value] = { id: obj.id, loc: obj.loc, name: obj.name, longname: obj.longname, colour: obj.colour, link: true };
+        data.objs[value] = { id: obj.id, loc: obj.loc, name: obj.name, longname: obj.longname, color: obj.color, link: true };
         return `{${value}}`;
       }
       return value; // fallback: plain text substitution
@@ -290,7 +290,7 @@ export class ObjectManager {
       const obj = this.getById(value);
       if (obj) {
         if (!data.objs[value]) {
-          data.objs[value] = { longname: obj.longname, color: obj.colour || obj.color };
+          data.objs[value] = { longname: obj.longname, color: obj.color };
         }
         return `{${value}}`;
       }

@@ -65,7 +65,7 @@ face
 facehow
 host
 hosthow
-colour
+color
 
 
 

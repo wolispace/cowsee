@@ -62,8 +62,8 @@ export class Utilities {
           return val;
         }
 
-        // Format value with styling if colour is defined
-        const color = obj.colour || obj.color;
+        // Format value with styling if color is defined
+        const color = obj.color;
         let styled = val;
         if (color && val !== '') {
           styled = `<span style="color: ${color}">${val}</span>`;

@@ -211,27 +211,27 @@ export class CommandManager extends Queue {
 
   /**
    * Parse a natural language object description into its components
-   * e.g. "3 small black fluffy mice" → { qty, colour, attribs, class, name }
+   * e.g. "3 small black fluffy mice" → { qty, color, attribs, class, name }
    */
   parseObj(str) {
-    const colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'black', 'white', 'grey', 'gray', 'brown', 'silver', 'gold'];
+    const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'black', 'white', 'grey', 'gray', 'brown', 'silver', 'gold'];
     const sizes = ['tiny', 'small', 'little', 'large', 'big', 'huge', 'giant', 'massive'];
     const words = str.trim().replace(/^["']|["']$/g, '').split(/\s+/);
     let qty = 1;
-    let colour = '', attribs = [], cls = '', name = '';
+    let color = '', attribs = [], cls = '', name = '';
     let i = 0;
     if (/^\d+$/.test(words[0])) { qty = parseInt(words[i++]); }
     const articles = ['a', 'an', 'the', 'some'];
     if (articles.includes(words[i]?.toLowerCase())) i++;
     while (i < words.length) {
       const w = words[i].toLowerCase();
-      if (!colour && colours.includes(w)) { colour = w; i++; }
+      if (!color && colors.includes(w)) { color = w; i++; }
       else if (sizes.includes(w)) { attribs.push(w); i++; }
       else { break; }
     }
     cls = words[i] || '';
     name = words.slice(i + 1).join(' ');
-    return { qty, colour, attribs: attribs.join(' '), class: cls, name };
+    return { qty, color, attribs: attribs.join(' '), class: cls, name };
   }
 
 
@@ -315,7 +315,7 @@ export class CommandManager extends Queue {
 
       } else if (gCount === 2) {
         if (firstword.toLowerCase().includes('lastword')) {
-          // get $target,$lastword → split on LAST space: "colour the cat blue" → "colour the cat" + "blue"
+          // get $target,$lastword → split on LAST space: "color the cat blue" → "color the cat" + "blue"
           const lastSpaceIdx = cmdText.lastIndexOf(' ');
           if (lastSpaceIdx !== -1) {
             this.context[varName(getBits[0])] = cmdText.substring(0, lastSpaceIdx);
@@ -527,7 +527,7 @@ export class CommandManager extends Queue {
       this.tickManager.objectManager.savePoolsToDisk();
     },
 
-    // eg: update $new_id to "worth=0, link=$exit, material='_door_', colour='lightgreen'"
+    // eg: update $new_id to "worth=0, link=$exit, material='_door_', color='lightgreen'"
     update: (rest) => {
       const match = rest.match(/^(\$\w+)\s+(?:to|=)\s+["']?(.+?)["']?$/i);
       if (!match) return;

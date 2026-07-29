@@ -34,7 +34,7 @@ if (generate) {
       class : randomName(),
       qty: 1,
       loc: objectManager.idManager.encodeInt(utils.random(max)), 
-      colour: randomColour() 
+      color: randomColor() 
     };
    //  obj.info = `It's a pretty ordinary ${obj.class}`;
     objectManager.save(obj);
@@ -54,7 +54,7 @@ let found = objectManager.getById('1');
 console.log('found', found);
 found.class = 'box';
 found.loc = '2';
-found.colour = 'pink',
+found.color = 'pink',
 found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
 objectManager.save(found);
 
@@ -62,7 +62,7 @@ found = objectManager.getById('3');
 console.log('found', found);
 found.class = 'cat';
 found.loc = '2';
-found.colour = 'seagreen',
+found.color = 'seagreen',
 found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 objectManager.save(found);
 
@@ -98,7 +98,7 @@ objectManager.savePoolsToDisk();
 // console.log('found again', found);
 // found.info = 'This is a brilliant cat';
 // found.pocket = '6',
-// found.colour = 'tomato',
+// found.color = 'tomato',
 // found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 // `say 'think',"[$actor] .oO( $text )"`
 // objectManager.save(found);
@@ -218,7 +218,7 @@ function initCommands() {
     code: `flush;say 'flush',"[$actor] flushed the pools";`
   },{
     name: "build",
-    code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, colour='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', colour='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
+    code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, color='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', color='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
   }
 ];
 
@@ -226,7 +226,7 @@ function initCommands() {
     obj.id = objectManager.idManager.new();
     obj.loc = '3';
     obj.class = 'command',
-    obj.color = randomColour(),
+    obj.color = randomColor(),
     objectManager.save(obj);
   }
 }
@@ -236,7 +236,7 @@ function randomName() {
   return names[utils.random(names.length)];
 }
 
-function randomColour() {
+function randomColor() {
   const names = ['wheat', 'seagreen', 'teal', 'tomato', 'dodgerblue', 'slategrey', 'plum', 'brick']
   return names[utils.random(names.length)];
 }

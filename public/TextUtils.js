@@ -20,13 +20,13 @@ export class TextUtils {
         }
 
         if (format == 'html') {
-          // Format value with styling if colour is defined
-          const color = obj.colour || obj.color;
+          // Format value with styling if color is defined
+          const color = obj.color ;
           let styled = val;
           if (color && val !== '') {
             styled = `<span style="color: ${color}">${val}</span>`;
           }
-          return `<a href="#" class="obj-link" data-id="${val}" title="Examine ${val} [${obj.id}]">${styled}</a>`;
+          return `<a href="#" class="obj-link" data-id="${id}" title="Examine ${val} [${id}]">${styled}</a>`;
         } else {
           return val;
         }

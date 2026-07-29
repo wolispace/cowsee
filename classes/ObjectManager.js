@@ -278,7 +278,7 @@ export class ObjectManager {
       const value = data.context[varName] ?? '';
       const obj = this.getById(value);
       if (obj) {
-        data.objs[value] = { id: obj.id, loc: obj.loc, name: obj.name, longname: obj.longname, color: obj.colour, link: true };
+        data.objs[value] = { id: obj.id, loc: obj.loc, name: obj.name, longname: obj.longname, colour: obj.colour, link: true };
         return `{${value}}`;
       }
       return value; // fallback: plain text substitution

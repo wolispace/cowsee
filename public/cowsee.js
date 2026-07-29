@@ -51,7 +51,7 @@ async function handleMsg(data) {
     }
   } else if (json.msg) {
     // TODO: ensure this player is logged in, otherwise skip this message
-    // alugn this playerInfo with the last msg they performed an their new loc
+    // align this playerInfo with the last msg they performed an their new loc
     if (json.context.actor == playerInfo.id) {
       playerInfo.loc = json.objs[playerInfo.id].loc;     
     }
@@ -68,6 +68,10 @@ function addMessage(json) {
   const div = document.createElement("div");
   const section = json.top ? '#top' : '#bottom';
   const info = document.querySelector(section);
+  // set the last target so we can refer to it as 'it' or 'them'
+  if (json?.context?.target) {
+    playerInfo.lastt = json.context.target; 
+  }
 
   // DEBUG: If the user simply includes 'logoff' in the msg then logoff - make a propper command later
   if (json.msg.includes('logoff')) {

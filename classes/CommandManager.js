@@ -26,7 +26,7 @@ export class CommandManager extends Queue {
       if (userCommand.cmd.includes('dump')) {
         this.tickManager.objectManager.dump();
       }
-      // userCommand = {actor: 'w', loc: '2', cmd: 'create a small black cat'}
+      // userCommand = {actor: 'w', loc: '2', cmd: 'create a small black cat', lastt='X'}
       this.add(userCommand);
       result.writeHead(200, { 'Content-Type': 'application/json' });
       result.end(JSON.stringify({ ok: true }));
@@ -80,6 +80,7 @@ export class CommandManager extends Queue {
       actor: commandObj.actor || commandObj.id,
       loc: commandObj.loc,
       niceness: commandObj.niceness || 0,
+      lastt: commandObj.lastt || '',
       cmd_text: rest,
       prefix: '',
       text: '',
@@ -204,6 +205,7 @@ export class CommandManager extends Queue {
       if (!obj) return '';
       value = obj[parts[i]] ?? '';
     }
+
     return value;
   }
 
@@ -303,9 +305,13 @@ export class CommandManager extends Queue {
       // --- Step 6: Map user input (cmd_text) into the variable slots ---
       const cmdText = this.context.cmd_text || '';
 
+      //TODO: if no object found, then assume 'it' and use the last target from the players 'history'
+      
+
       if (gCount === 1) {
         // get $target  →  $target = cmd_text
         this.context[varName(getBits[0])] = cmdText;
+        console.log(`get`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
 
       } else if (gCount === 2) {
         if (firstword.toLowerCase().includes('lastword')) {
@@ -372,6 +378,14 @@ export class CommandManager extends Queue {
         //console.log(this.context);
       }
 
+      // treat 'it' and 'them' as the last target
+      if (['it','them'].includes(this.context.target)) {
+        this.context.target = this.context.lastt;
+      }
+      if (['it','them'].includes(this.context.second)) {
+        this.context.second = this.context.lastt;
+      }
+
       // --- Step 7: Resolve objects (like perl's get_resolve) ---
       // Save the raw text values, then resolve named objects to IDs
       const ntarget = this.context.target;
@@ -380,6 +394,8 @@ export class CommandManager extends Queue {
       // Restore previous target/second before resolving
       this.context.target = ltarget;
       this.context.second = lsecond;
+
+
 
       // Resolve: if the variable is 'target' or 'second', look up the object ID
       if (ntarget) {

@@ -3,9 +3,11 @@ import path from "path";
 
 import { Utilities } from './classes/Utilities.js';
 import { TickManager } from './classes/TickManager.js';
+import { TextUtils } from './public/TextUtils.js';
 
 const tickManager = new TickManager(true);
 const utils = new Utilities();
+const textUtils = new TextUtils();
 
 const objectManager = tickManager.objectManager;
 const commandManager = tickManager.commandManager;
@@ -130,6 +132,12 @@ inShed = objectManager.findInLoc(shedObjId);
 console.log(inLoc, inShed);
 context.loc = shedObjId;
 showLookMsg(context);
+commandManager.add({ cmd: 'create a bus', actor: context.actor, loc: shedObjId });
+showLookMsg(context);
+const lastt = commandManager.context.target;
+console.log('last target was', lastt);
+commandManager.add({ cmd: 'paint it red', actor: context.actor, loc: shedObjId, lastt: lastt });
+showLookMsg(context, 'html');
 
 // save after any manual changes..
 objectManager.savePoolsToDisk();
@@ -153,10 +161,10 @@ function deleteTestFiles() {
   }
 }
 
-function showLookMsg(context) {
+function showLookMsg(context, format = 'text') {
   const data = lookManager.look(context);
   data.playerId = context.actor;
-  const msg = utils.interpolate(data, 'text');
+  const msg = textUtils.expand(data, format);
   //tickManager.messageManager.add(data);
   console.log(msg);
 }
@@ -219,6 +227,9 @@ function initCommands() {
   },{
     name: "build",
     code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, color='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', color='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
+  },{
+    name: "paint",
+    code: `get $target,$lastword in $loc;\nset $target's colour to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";;\nrelook $loc;`
   }
 ];
 

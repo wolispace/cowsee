@@ -289,6 +289,7 @@ export class CommandManager extends Queue {
         // Any text in the 4th position triggers non-greedy matching
         nonGreedy = true;
       }
+      console.log({gCount}, getBits);
 
       // Helper: determine if a bit is a quoted literal (e.g., "as", "to")
       const isQuotedLiteral = (bit) => {
@@ -304,9 +305,6 @@ export class CommandManager extends Queue {
 
       // --- Step 6: Map user input (cmd_text) into the variable slots ---
       const cmdText = this.context.cmd_text || '';
-
-      //TODO: if no object found, then assume 'it' and use the last target from the players 'history'
-      
 
       if (gCount === 1) {
         // get $target  →  $target = cmd_text
@@ -335,6 +333,8 @@ export class CommandManager extends Queue {
             this.context[varName(getBits[1])] = '';
           }
         }
+        console.log(`get2`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
+        console.log(`get2`, varName(getBits[1]), getBits[1] ,this.context[varName(getBits[1])]);
 
       } else if (gCount >= 3) {
         // 3 or 4 variables: split cmd_text on relationship word
@@ -375,7 +375,9 @@ export class CommandManager extends Queue {
           this.context[varName(getBits[1])] = '';
           this.context[varName(getBits[2])] = '';
         }
-        //console.log(this.context);
+        console.log(`get3`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
+        console.log(`get3`, varName(getBits[1]), getBits[1] ,this.context[varName(getBits[1])]);
+        console.log(`get3`, varName(getBits[2]), getBits[2] ,this.context[varName(getBits[2])]);
       }
 
       // treat 'it' and 'them' as the last target
@@ -385,6 +387,7 @@ export class CommandManager extends Queue {
       if (['it','them'].includes(this.context.second)) {
         this.context.second = this.context.lastt;
       }
+      //console.log(this.context);
 
       // --- Step 7: Resolve objects (like perl's get_resolve) ---
       // Save the raw text values, then resolve named objects to IDs
@@ -394,8 +397,6 @@ export class CommandManager extends Queue {
       // Restore previous target/second before resolving
       this.context.target = ltarget;
       this.context.second = lsecond;
-
-
 
       // Resolve: if the variable is 'target' or 'second', look up the object ID
       if (ntarget) {
@@ -414,7 +415,7 @@ export class CommandManager extends Queue {
           this.context.second = nsecond; // keep raw text if no object found
         }
       }
-      // console.log('final', this.context);
+      console.log('final', this.context);
     },
 
     // IF/THEN/ELSE handler

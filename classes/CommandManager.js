@@ -289,7 +289,7 @@ export class CommandManager extends Queue {
         // Any text in the 4th position triggers non-greedy matching
         nonGreedy = true;
       }
-      console.log({gCount}, getBits);
+      //console.log({ gCount }, getBits);
 
       // Helper: determine if a bit is a quoted literal (e.g., "as", "to")
       const isQuotedLiteral = (bit) => {
@@ -309,7 +309,7 @@ export class CommandManager extends Queue {
       if (gCount === 1) {
         // get $target  →  $target = cmd_text
         this.context[varName(getBits[0])] = cmdText;
-        console.log(`get`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
+        //console.log(`get`, varName(getBits[0]), getBits[0], this.context[varName(getBits[0])]);
 
       } else if (gCount === 2) {
         if (firstword.toLowerCase().includes('lastword')) {
@@ -333,8 +333,8 @@ export class CommandManager extends Queue {
             this.context[varName(getBits[1])] = '';
           }
         }
-        console.log(`get2`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
-        console.log(`get2`, varName(getBits[1]), getBits[1] ,this.context[varName(getBits[1])]);
+        //console.log(`get2`, varName(getBits[0]), getBits[0], this.context[varName(getBits[0])]);
+        //console.log(`get2`, varName(getBits[1]), getBits[1], this.context[varName(getBits[1])]);
 
       } else if (gCount >= 3) {
         // 3 or 4 variables: split cmd_text on relationship word
@@ -375,16 +375,16 @@ export class CommandManager extends Queue {
           this.context[varName(getBits[1])] = '';
           this.context[varName(getBits[2])] = '';
         }
-        console.log(`get3`, varName(getBits[0]), getBits[0] ,this.context[varName(getBits[0])]);
-        console.log(`get3`, varName(getBits[1]), getBits[1] ,this.context[varName(getBits[1])]);
-        console.log(`get3`, varName(getBits[2]), getBits[2] ,this.context[varName(getBits[2])]);
+        //console.log(`get3`, varName(getBits[0]), getBits[0], this.context[varName(getBits[0])]);
+        //console.log(`get3`, varName(getBits[1]), getBits[1], this.context[varName(getBits[1])]);
+        //console.log(`get3`, varName(getBits[2]), getBits[2], this.context[varName(getBits[2])]);
       }
 
-      // treat 'it' and 'them' as the last target
-      if (['it','them'].includes(this.context.target)) {
+      // treat 'it' and 'them' as the last target — resolve BEFORE object lookup below
+      if (['it', 'them'].includes((this.context.target || '').toLowerCase())) {
         this.context.target = this.context.lastt;
       }
-      if (['it','them'].includes(this.context.second)) {
+      if (['it', 'them'].includes((this.context.second || '').toLowerCase())) {
         this.context.second = this.context.lastt;
       }
       //console.log(this.context);
@@ -398,24 +398,28 @@ export class CommandManager extends Queue {
       this.context.target = ltarget;
       this.context.second = lsecond;
 
+      // Helper: returns true if the value is already a known object ID (skip name lookup)
+      const isAlreadyId = (val) => !!this.tickManager.objectManager.getById(val);
+
       // Resolve: if the variable is 'target' or 'second', look up the object ID
       if (ntarget) {
-        const resolved = this.tickManager.objectManager.findByNameInLoc(ntarget, getLocValue);
-        if (resolved) {
-          this.context.target = resolved;
+        if (isAlreadyId(ntarget)) {
+          // Already an ID (e.g. resolved from 'it') — use directly
+          this.context.target = ntarget;
         } else {
-          this.context.target = ntarget; // keep raw text if no object found
+          const resolved = this.tickManager.objectManager.findByNameInLoc(ntarget, getLocValue);
+          this.context.target = resolved || ntarget; // keep raw text if no object found
         }
       }
       if (nsecond) {
-        const resolved = this.tickManager.objectManager.findByNameInLoc(nsecond, getSecondLocValue);
-        if (resolved) {
-          this.context.second = resolved;
+        if (isAlreadyId(nsecond)) {
+          this.context.second = nsecond;
         } else {
-          this.context.second = nsecond; // keep raw text if no object found
+          const resolved = this.tickManager.objectManager.findByNameInLoc(nsecond, getSecondLocValue);
+          this.context.second = resolved || nsecond; // keep raw text if no object found
         }
       }
-      console.log('final', this.context);
+      //console.log('final', this.context);
     },
 
     // IF/THEN/ELSE handler
@@ -620,7 +624,8 @@ export class CommandManager extends Queue {
       const obj = { loc, ...parsed };
       obj.id = objectManager.idManager.new();
       objectManager.addToPools(obj);
-      this.context.target = this.context.cmd_text;
+      this.context.target = obj.id;   // set target to the new object's ID
+      this.context.lastt = obj.id;    // update lastt so 'it' works in follow-up commands
       this.context.new_id = obj.id;
     },
 

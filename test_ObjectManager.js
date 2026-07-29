@@ -29,16 +29,16 @@ if (cleanup) {
 }
 
 if (generate) {
-  let counter = 0; 
+  let counter = 0;
   while (counter++ < max) {
-    const obj = { 
+    const obj = {
       id: objectManager.idManager.new(),
-      class : randomName(),
+      class: randomName(),
       qty: 1,
-      loc: objectManager.idManager.encodeInt(utils.random(max)), 
-      color: randomColor() 
+      loc: objectManager.idManager.encodeInt(utils.random(max)),
+      color: randomColor()
     };
-   //  obj.info = `It's a pretty ordinary ${obj.class}`;
+    //  obj.info = `It's a pretty ordinary ${obj.class}`;
     objectManager.save(obj);
     if (counter % 100 === 0) {
       process.stdout.write(":");
@@ -57,7 +57,7 @@ console.log('found', found);
 found.class = 'box';
 found.loc = '2';
 found.color = 'pink',
-found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
+  found.code = `if reacting to think then thinkme;\n##thinkme:\nsay 'say',"[$actor] says 'What do you mean?'";`;
 objectManager.save(found);
 
 found = objectManager.getById('3');
@@ -65,7 +65,7 @@ console.log('found', found);
 found.class = 'cat';
 found.loc = '2';
 found.color = 'seagreen',
-found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
+  found.code = `if reacting to say then thinkme;\n##thinkme:\nsay 'think',"[$actor] thinks .oO( $cmd_text )";`;
 objectManager.save(found);
 
 // save all pools to disk
@@ -106,7 +106,7 @@ objectManager.savePoolsToDisk();
 // objectManager.save(found);
 
 // build a location and test its built properly
-const player = objectManager.findPlayer({playername: 'wolis'});
+const player = objectManager.findPlayer({ playername: 'wolis' });
 const context = {
   loc: player.loc,
   actor: player.id,
@@ -133,10 +133,12 @@ console.log(inLoc, inShed);
 context.loc = shedObjId;
 showLookMsg(context);
 commandManager.add({ cmd: 'create a bus', actor: context.actor, loc: shedObjId });
+tickManager.doNext();
 showLookMsg(context);
-const lastt = commandManager.context.target;
+const lastt = commandManager.context.lastt;  // now an ID, set by the new handler
 console.log('last target was', lastt);
 commandManager.add({ cmd: 'paint it red', actor: context.actor, loc: shedObjId, lastt: lastt });
+tickManager.doNext();
 showLookMsg(context, 'html');
 
 // save after any manual changes..
@@ -148,7 +150,7 @@ let elapsed = Date.now() - start;
 let units = 'ms';
 if (elapsed > 1000) {
   elapsed = elapsed / 1000;
-  units = 's'; 
+  units = 's';
 }
 console.log(`----------- END ----------- ${elapsed}${units}`);
 
@@ -171,9 +173,9 @@ function showLookMsg(context, format = 'text') {
 
 function initPlayers() {
   const players = [
-    {loc: '2', name: 'Wolis', id: 'wol'},
-    {loc: '2', name: 'Bob', id: 'bob'},
-    {loc: '3', name: 'Jane', id: 'jan'},
+    { loc: '2', name: 'Wolis', id: 'wol' },
+    { loc: '2', name: 'Bob', id: 'bob' },
+    { loc: '3', name: 'Jane', id: 'jan' },
   ];
 
   for (const player of players) {
@@ -182,8 +184,8 @@ function initPlayers() {
     obj.loc = player.loc;
     obj.name = player.name;
     obj.class = 'player',
-    obj.color = 'goldenrod',
-    objectManager.save(obj);
+      obj.color = 'goldenrod',
+      objectManager.save(obj);
   }
 }
 
@@ -191,54 +193,54 @@ function initCommands() {
   const commands = [{
     name: "say",
     code: `get $text,$rel,$target in $loc;\nif $target > 0 then sayto else saytext;\n\n##sayto:\nif $niceness > 0 then saynice;\nif $text like \"?\" then asktoit else saytoit;\n##asktoit:\nsay 'ask',\"[$actor] $prefix asks [$target] '$text'\";\n##saytoit:\nsay 'say',\"[$actor] $prefix says '$text' to [$target]\";\n\n##saytext:\nget $text;\nif $niceness > 0 then saynice else saynormal;\nif $text like \"?\" then askit else sayit;\n##askit:\nsay 'ask',\"[$actor] $prefix asks '$text'\";\n##sayit:\nsay 'say',\"[$actor] $prefix says '$text'\";\n\n##saynice:\nvar $prefix to (sweetly,nicely,politely);`,
-  },{
+  }, {
     name: "think",
     code: `get $text;\nif $text ne '' then thinkit else ponder;\n##thinkit:\nsay 'think',\"[$actor] .oO( $text )\";\n##ponder:\nsay 'think',\"[$actor] .o0( I keep thinking its Tuesday )\"`
-  },{
+  }, {
     name: "do",
     code: `get $text;\nif $text ne '' then doit else fail;\n##doit:\nsay 'action',\"[$actor] $text\";\n##fail:\nvar $text to (claps,dances around the room,sits down);\nrunsub doit;`
-  },{
+  }, {
     name: "create",
     code: `get $text;\nnew $text;\nsay 'create',"[$actor] creates [$target]";\nrelook $loc;`
-  },{
+  }, {
     name: "find",
     code: `get $target;\nvar $dest to $target's loc;\nif $target > 0 then itshere else fail;\n##itshere:\nvar $dest to $target's loc;\nsay 'msg',\"[$actor] finds [$target] in [$dest]\";\n##fail;\nsay 'msg',\"[$actor] wants to find '$cmd_text' but has no idea where to start looking\";`
-  },{
+  }, {
     name: "look",
     code: `say 'look',"[$actor] looks around";\nrelook $loc;`
-  },{
+  }, {
     name: "put",
     code: `get $target,$rel,$second in $loc,$loc;\nset $target's hosthow to \"$rel\";\nset $target's host to $second;\nset $target's hosthow to \"$rel\";\nset $target's pose to '';\nsay 'put',\"[$actor] put [$target] $rel [$second]\";\nrelook $loc;`
-  },{
+  }, {
     name: "push",
     code: `get $target in $loc;\nclear $target,all;\nsay 'push',\"[$actor] pushes [$target]\";\nrelook $loc;`
-  },{
+  }, {
     name: "pose",
     code: `get $target,\"as\",$text,non-greedy in $loc;\nset $target's pose to $text;\nsay 'pose',\"[$actor] poses [$target] as $text\";\nrelook $loc;`
-  },{
+  }, {
     name: "goto",
     code: `get $target;clear $actor,all;\nset $actor's loc to $target's loc;\nsay 'leaves',\"[$actor] dissapears in a puff of smoke\";\nvar $loc to $target's loc;\nsay 'arrives',\"[$actor] appears out of thin air!\";\nrelook $loc;`
-  },{
+  }, {
     name: "go",
     code: `get $target in $loc;\nvar $tlink to $target's link;\nsay 'leaves',\"[$actor] leaves via [$target]\";\nvar $loc to $tlink's loc;\nset $actor's loc to $loc;\nsay 'arrives',\"[$actor] appears via [$tlink]\";\nrelook $loc;`
-  },{
+  }, {
     name: "flush",
     code: `flush;say 'flush',"[$actor] flushed the pools";`
-  },{
+  }, {
     name: "build",
     code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, color='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', color='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
-  },{
+  }, {
     name: "paint",
-    code: `get $target,$lastword in $loc;\nset $target's colour to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";;\nrelook $loc;`
+    code: `get $target,$lastword in $loc;\nset $target's color to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";;\nrelook $loc;`
   }
-];
+  ];
 
   for (const obj of commands) {
     obj.id = objectManager.idManager.new();
     obj.loc = '3';
     obj.class = 'command',
-    obj.color = randomColor(),
-    objectManager.save(obj);
+      obj.color = randomColor(),
+      objectManager.save(obj);
   }
 }
 

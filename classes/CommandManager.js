@@ -210,6 +210,18 @@ export class CommandManager extends Queue {
   }
 
   /**
+   * Resolve a $var or chained expression (e.g. $target's link's host) to an object.
+   * Returns the object, or null if the ID can't be resolved.
+   * @param {string} token  - e.g. '$target' or "$target's link's host"
+   * @returns {object|null}
+   */
+  resolveObj(token) {
+    const id = this.resolveValue(token);
+    if (!id) return null;
+    return this.tickManager.objectManager.getById(id) || null;
+  }
+
+  /**
    * Parse a natural language object description into its components
    * e.g. "3 small black fluffy mice" → { qty, color, attribs, class, name }
    */
@@ -505,25 +517,16 @@ export class CommandManager extends Queue {
     // SET handler - set object properties
     set: (rest) => {
       // Match: $target's host to $second or $target's hosthow to "value"
-
-      // $target's hosthow to "$rel"
-      let match = rest.match(/^(\$\w+)\s*'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
+      // match[1] = $var or chained $var's prop's prop, match[2] = prop, match[3] = value
+      let match = rest.match(/^(\$[\w'\s]+)\s*'s\s+(\w+)\s+(?:to|=)\s+(.+)$/i);
       if (!match) return;
 
-      const objVar = match[1].substring(1); // $target -> target
-      const prop = match[2].toLowerCase();  // host, hosthow, pose, etc.
-      const rawVal = match[3].trim();
-
-      const objId = this.context[objVar];
-      if (!objId) return;
-
-      const obj = this.tickManager.objectManager.getById(objId);
+      const obj = this.resolveObj(match[1].trim());
       if (!obj) return;
 
+      const prop = match[2].toLowerCase();           // host, hosthow, pose, etc.
+      const val = this.resolveValue(match[3].trim()); // handles $vars and quoted strings
       const oldObj = { ...obj };
-
-      // Resolve the value (handles $vars and quoted strings)
-      const val = this.resolveValue(rawVal);
       obj[prop] = val;
 
       // Save the updated object
@@ -534,12 +537,11 @@ export class CommandManager extends Queue {
 
     // eg: update $new_id to "worth=0, link=$exit, material='_door_', color='lightgreen'"
     update: (rest) => {
-      const match = rest.match(/^(\$\w+)\s+(?:to|=)\s+["']?(.+?)["']?$/i);
+      // match[1] = $var or chained expression, match[2] = key=val pairs
+      const match = rest.match(/^(\$[\w'\s]+)\s+(?:to|=)\s+["']?(.+?)["']?$/i);
       if (!match) return;
 
-      const objId = this.context[match[1].substring(1)];
-      if (!objId) return;
-      const obj = this.tickManager.objectManager.getById(objId);
+      const obj = this.resolveObj(match[1].trim());
       if (!obj) return;
 
       const oldObj = { ...obj };
@@ -557,14 +559,14 @@ export class CommandManager extends Queue {
     },
 
     clear: (rest) => {
+      // match[1] = $var or chained expression, match[2] = params
       const match = rest.match(/^(.+)\s*,\s*(.+)$/i);
-      const objVar = match[1].substring(1); // $target -> target
-      const params = match[2];
-      const objId = this.context[objVar];
-      if (!objId) return;
-      const obj = this.tickManager.objectManager.getById(objId);
+      if (!match) return;
+
+      const obj = this.resolveObj(match[1].trim());
       if (!obj) return;
 
+      const params = match[2];
       // TODO: if params == 'xyz' we only clear those
       delete obj.host;
       delete obj.hosthow;
@@ -645,6 +647,22 @@ export class CommandManager extends Queue {
       this.tickManager.objectManager.flush();
     },
 
+    unhost: (rest) => {
+      // unhost everything hosted by this object.
+      // Supports simple vars ($target) and chained expressions ($target's link's host)
+      const obj = this.resolveObj(rest.trim());
+      if (!obj) return;
+      const hosted = this.tickManager.objectManager.findInLoc(obj.id);
+      for (const subId of hosted) {
+        const sub = this.tickManager.objectManager.getById(subId);
+        if (!sub) continue;
+        sub.host = '';
+        sub.hosthow = '';
+        sub.pose = '';
+      }
+    },
+
+
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },
     case: (rest) => { console.log(`case`) },
@@ -669,7 +687,6 @@ export class CommandManager extends Queue {
     save: (rest) => { console.log(`save`) },
     swap: (rest) => { console.log(`swap`) },
     take: (rest) => { console.log(`take`) },
-    unhost: (rest) => { console.log(`unhost`) },
   };
 
 

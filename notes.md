@@ -14,4 +14,5 @@ Remote servers:
 
 https://bonto.dev/dashboard
  NOTE: you have to update the package version for changes to show in browser!
-
+-OR- stop and start the container ?
+- issue: the server keeps restarting - maybe wont handle long running SSE ?

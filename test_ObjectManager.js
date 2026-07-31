@@ -144,7 +144,7 @@ lastt = commandManager.context.lastt;  // now an ID, set by the new handler
 commandManager.add({ cmd: 'get the bus', actor: context.actor, loc: shedObjId, lastt: lastt });
 tickManager.doNext();
 context.loc = context.actor;
-// the bus should now be within the actor 
+// the bus should now be within the actor
 showLookMsg(context);
 
 
@@ -241,7 +241,7 @@ function initCommands() {
     code: `get $target,$lastword in $loc;\nset $target's color to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";\nrelook $loc;`
   }, {
     name: "get",
-    code: `get $target in $loc;\nunhost $target;\nclear $target,all;\nset $target's pose to \"\";\nset $target's host to $actor;\nsay 'gets',\"[$actor] gets [$target]\";\nrelook $loc;\nvar $loc to $actor;\nsay 'arrives',\"[$target] appears from nowhere\";\nrelook $loc;`
+    code: `get $target in $loc;\nunhost $target;\nclear $target,all;\nset $target's pose to \"\";\nset $target's loc to $actor;\nsay 'gets',\"[$actor] gets [$target]\";\nrelook $loc;\nvar $loc to $actor;\nsay 'arrives',\"[$target] appears from nowhere\";\nrelook $loc;`
   }
   ];
 

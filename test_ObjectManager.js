@@ -147,6 +147,12 @@ context.loc = context.actor;
 // the bus should now be within the actor
 showLookMsg(context);
 
+commandManager.add({ cmd: 'drop the bus', actor: context.actor, loc: context.actor });
+tickManager.doNext();
+context.loc = shedObjId;
+// the bus should now be back in the shed
+showLookMsg(context);
+
 
 // save after any manual changes..
 objectManager.savePoolsToDisk();
@@ -242,6 +248,9 @@ function initCommands() {
   }, {
     name: "get",
     code: `get $target in $loc;\nunhost $target;\nclear $target,all;\nset $target's pose to \"\";\nset $target's loc to $actor;\nsay 'gets',\"[$actor] gets [$target]\";\nrelook $loc;\nvar $loc to $actor;\nsay 'arrives',\"[$target] appears from nowhere\";\nrelook $loc;`
+  }, {
+    name: "drop",
+    code: `get $target in $actor;\nvar $dest to $actor's loc;\nset $target's loc to $dest;\nsay 'drops',\"[$actor] drops [$target]\";\nvar $loc to $dest;\nrelook $loc;\nvar $loc to $actor;\nsay 'gone',\"[$target] has gone\";\nrelook $loc;`
   }
   ];
 

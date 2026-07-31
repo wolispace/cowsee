@@ -659,7 +659,12 @@ export class CommandManager extends Queue {
         sub.host = '';
         sub.hosthow = '';
         sub.pose = '';
+        this.tickManager.objectManager.save(sub);
       }
+    },
+
+    relocate: (rest) => {
+      
     },
 
 

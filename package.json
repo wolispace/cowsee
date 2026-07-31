@@ -3,6 +3,7 @@
   "version": "0.0.4",
   "type": "module",
   "scripts": {
+    "test": "node test_ObjectManager.js",
     "start": "node server.js"
   }
 }

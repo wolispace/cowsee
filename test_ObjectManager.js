@@ -135,11 +135,18 @@ showLookMsg(context);
 commandManager.add({ cmd: 'create a bus', actor: context.actor, loc: shedObjId });
 tickManager.doNext();
 showLookMsg(context);
-const lastt = commandManager.context.lastt;  // now an ID, set by the new handler
+let lastt = commandManager.context.lastt;  // now an ID, set by the new handler
 console.log('last target was', lastt);
 commandManager.add({ cmd: 'paint it red', actor: context.actor, loc: shedObjId, lastt: lastt });
 tickManager.doNext();
 showLookMsg(context, 'html');
+lastt = commandManager.context.lastt;  // now an ID, set by the new handler
+commandManager.add({ cmd: 'get the bus', actor: context.actor, loc: shedObjId, lastt: lastt });
+tickManager.doNext();
+context.loc = context.actor;
+// the bus should now be within the actor 
+showLookMsg(context);
+
 
 // save after any manual changes..
 objectManager.savePoolsToDisk();
@@ -231,7 +238,10 @@ function initCommands() {
     code: `get $text;\nnew newexit;\nvar $exit to $new_id;\nnew $text;\nupdate $new_id to \"link=$exit, color='lightgreen'\";\nupdate $exit to \"link=$new_id, loc=$new_id, extra='from here', qty=1, class='exit', color='lightgreen'\";\nsay 'create',\"[$actor] built [$new_id]\";\nrelook $loc;`
   }, {
     name: "paint",
-    code: `get $target,$lastword in $loc;\nset $target's color to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";;\nrelook $loc;`
+    code: `get $target,$lastword in $loc;\nset $target's color to $lastword;\nsay 'paint',\"[$actor] paints [$target] $lastword\";\nrelook $loc;`
+  }, {
+    name: "get",
+    code: `get $target in $loc;\nunhost $target;\nclear $target,all;\nset $target's pose to \"\";\nset $target's host to $actor;\nsay 'gets',\"[$actor] gets [$target]\";\nrelook $loc;\nvar $loc to $actor;\nsay 'arrives',\"[$target] appears from nowhere\";\nrelook $loc;`
   }
   ];
 

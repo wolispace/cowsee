@@ -1,0 +1,12 @@
+{
+  "watch": [
+    "classes"
+  ],
+  "ignore": [
+    "node_modules",
+    ".git",
+    "tmp",
+    "*.log",
+    "_*"
+  ]
+}

@@ -10,6 +10,7 @@ export class PoolManager {
   currentBucket = 0; // which bucket are we filling now
   dirtyUpdated = new Set(); // all of the modified objects
   dirtyDeleted = new Set(); // all of the deleted objects
+  anyDirty = false; // set to true the moment one pool is dirty, clear after save
 
   /**
    * A pool manager you get and set into which loads and saves to a base62 shard file eg 'index_name_D.json' 
@@ -72,6 +73,7 @@ export class PoolManager {
     }
     this.buckets[this.currentBucket].add(key);
     this.dirtyUpdated.add(key);
+    this.tickManager.anyDirty = true;
     // remove from the previous key eg was in loc:A now in loc:B
     // if loc is empty then flag it as deleted
     if (!oldKey || oldKey === key) return;
@@ -82,9 +84,12 @@ export class PoolManager {
     if (isEmpty) {
       console.log(`delete old loc=${oldKey} id=${thing} isEmpty=`, isEmpty);
       this.dirtyDeleted.add(oldKey);
+          this.tickManager.anyDirty = true;
     } else {
       this.dirtyUpdated.add(oldKey);
+          this.tickManager.anyDirty = true;
     }
+    console.log('anyDirty', this.tickManager.anyDirty);
   }
 
   /**
@@ -101,9 +106,11 @@ export class PoolManager {
       if (thing === undefined || thing === null) {
         this.pool.delete(key);
         this.dirtyDeleted.add(key);
+            this.tickManager.anyDirty = true;
       } else {
         existing.delete(thing);
         this.dirtyUpdated.add(key);
+            this.tickManager.anyDirty = true;
       }
     }
   }

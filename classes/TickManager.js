@@ -13,6 +13,8 @@ export class TickManager {
   playerInfo = {};
   saveTimeout = null;
   #isProcessing = false;
+  anyDirty = false; // set by pools to true the moment one pool is dirty, clear after save
+
 
   constructor(testing = false) {
     this.testing = testing;
@@ -66,13 +68,14 @@ export class TickManager {
 
     // Nothing left to do
     this.#isProcessing = false;
+    console.log('anyDirty', this.anyDirty);
+    if (this.anyDirty) {
+      this.debounceSave();
 
-    this.debounceSave();
+    }
   }
 
   debounceSave() {
-  
-
     // Clear any existing timer
     if (this.saveTimeout) {
         clearTimeout(this.saveTimeout);
@@ -84,6 +87,7 @@ export class TickManager {
         this.objectManager.savePoolsToDisk();
         console.log('execute timeout');
         this.saveTimeout = null; // optional: helps debugging
+        this.anyDirty = false;
     }, this.interval);
     console.log('timeout set');
   }

@@ -69,7 +69,7 @@ found.color = 'seagreen',
 objectManager.save(found);
 
 // save all pools to disk
-objectManager.savePoolsToDisk();
+//objectManager.savePoolsToDisk();
 
 // const list = objectManager.findByName('pen');
 // console.log('find all pens by name', list);

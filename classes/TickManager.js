@@ -4,15 +4,19 @@ import { ObjectManager } from './ObjectManager.js';
 import { LookManager } from './LookManager.js';
 import { FileManager } from './FileManager.js';
 import { PlayerManager } from './PlayerManager.js';
+import { Utilities } from './Utilities.js';
 
+const IDLE_SAVE_MS = 5_000;
 
 export class TickManager {
   interval = 5_000;
   playerInfo = {};
+  saveTimeout = null;
   #isProcessing = false;
 
   constructor(testing = false) {
     this.testing = testing;
+    this.utils = new Utilities();
     this.commandManager = new CommandManager(this);
     this.messageManager = new MessageManager(this);
     this.fileManager = new FileManager(this);
@@ -62,7 +66,25 @@ export class TickManager {
 
     // Nothing left to do
     this.#isProcessing = false;
-    // TODO: do this better - when idle save changes to disk
-    this.objectManager.savePoolsToDisk();
+
+    this.debounceSave();
+  }
+
+  debounceSave() {
+  
+
+    // Clear any existing timer
+    if (this.saveTimeout) {
+        clearTimeout(this.saveTimeout);
+        console.log('clear timeout');
+    }
+
+    // Set a new 5-second timer
+    this.saveTimeout = setTimeout(() => {
+        this.objectManager.savePoolsToDisk();
+        console.log('execute timeout');
+        this.saveTimeout = null; // optional: helps debugging
+    }, this.interval);
+    console.log('timeout set');
   }
 }

@@ -53,7 +53,10 @@ async function handleMsg(data) {
     // TODO: ensure this player is logged in, otherwise skip this message
     // align this playerInfo with the last msg they performed an their new loc
     if (json.context.actor == playerInfo.id) {
-      playerInfo.loc = json.objs[playerInfo.id].loc;     
+      const obj = json.objs[playerInfo.id];
+      if (obj) {
+        playerInfo.loc = json.objs[playerInfo.id].loc;
+      }
     }
     // dont show messages not for this location
     // but allow id inside self

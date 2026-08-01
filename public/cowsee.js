@@ -56,7 +56,8 @@ async function handleMsg(data) {
       playerInfo.loc = json.objs[playerInfo.id].loc;     
     }
     // dont show messages not for this location
-    if (playerInfo.loc != json.context.loc) return;
+    // but allow id inside self
+    if (json.context.loc != playerInfo.id && playerInfo.loc != json.context.loc) return;
 
     addMessage(json);
   }

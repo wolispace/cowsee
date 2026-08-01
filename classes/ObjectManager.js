@@ -383,5 +383,15 @@ export class ObjectManager {
     // messageManager.add(data);
     return data;
   }
+
+    /**
+   * Lits objects in a location
+   * @param {object} context 
+   * @returns {object}
+   */
+  listLoc(context) {
+    const data = this.tickManager.lookManager.list(context);
+    return data;
+  }
 };
 

@@ -601,6 +601,16 @@ export class CommandManager extends Queue {
       this.tickManager.messageManager.add(data);
     },
 
+    
+    list: (rest) => {
+      const loc = this.resolveValue(rest.trim());
+      this.context.loc = loc;
+      const data = this.tickManager.objectManager.listLoc({ ...this.context });
+      this.tickManager.messageManager.add(data);
+
+    },
+
+
     new: (rest) => {
       const parsed = this.parseObj(this.resolveValue(rest.trim()));
       const objectManager = this.tickManager.objectManager;
@@ -664,9 +674,8 @@ export class CommandManager extends Queue {
     },
 
     relocate: (rest) => {
-      
+      console.log('relocate, all-in-one move update and msg');
     },
-
 
     add: (rest) => { console.log(`add`) },
     call: (rest) => { console.log(`call`) },

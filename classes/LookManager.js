@@ -24,20 +24,22 @@ export class LookManager {
    */
   list(context) {
     this.context = context;
+    this.sentences = [];
+    
     const loc = this.objectManager.getById(this.context.loc);
     this.found = this.objectManager.findInLoc(loc.id);
-    this.context.objs.push[loc];
-    const inon = 'in';
-    this.sentences = [`You are ${inon} ${obj.id}`];
+
+    this.sentences = [`In {${loc.id}} you see: `];
     if (this.found.size < 1) {
       this.sentences.push('Nothing interesting here');
       return this.returnData();
     }
 
     this.objs = this.populateObjs();
+    this.objs[loc.id] = loc;
     let list = '';
-    for (const id of this.objs) {
-      list += `{${id}}, `;
+    for (const id of this.found) {
+      list += `<li>{${id}}</li>`;
     }
     this.sentences.push(list);
     return this.returnData();

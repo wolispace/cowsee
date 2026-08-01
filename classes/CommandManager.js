@@ -531,8 +531,6 @@ export class CommandManager extends Queue {
 
       // Save the updated object
       this.tickManager.objectManager.save(obj, oldObj);
-      // DEBUG: until we have tick manager handling save to disk.
-      this.tickManager.objectManager.savePoolsToDisk();
     },
 
     // eg: update $new_id to "worth=0, link=$exit, material='_door_', color='lightgreen'"
@@ -554,8 +552,6 @@ export class CommandManager extends Queue {
       }
 
       this.tickManager.objectManager.save(obj, oldObj);
-      // DEBUG: quick save here, will do lazy via tickManager
-      this.tickManager.objectManager.savePoolsToDisk();
     },
 
     clear: (rest) => {
@@ -575,8 +571,6 @@ export class CommandManager extends Queue {
 
       // Save the updated object
       this.tickManager.objectManager.save(obj);
-      // DEBUG: until we have tick manager handling save to disk.
-      this.tickManager.objectManager.savePoolsToDisk();
     },
 
     // SAY handler

@@ -16,6 +16,7 @@ export class ObjectManager {
 
   constructor(tickManager) {
     this.tickManager = tickManager;
+    this.utils = tickManager.utils;
     for (const key of this.keys) {
       this.pools[key] = new PoolManager(tickManager, key);
     }
@@ -259,6 +260,9 @@ export class ObjectManager {
    * - merging the objects with existing json on disk
    */
   savePoolsToDisk() {
+
+    const caller = this.utils.getImmediateCaller();
+    console.log(caller, '--- save pool ---');
     // save changed pools to disk
     for (const pool of Object.values(this.pools)) {
       pool.saveDirty();

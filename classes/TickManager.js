@@ -68,7 +68,6 @@ export class TickManager {
 
     // Nothing left to do
     this.#isProcessing = false;
-    console.log('anyDirty', this.anyDirty);
     if (this.anyDirty) {
       this.debounceSave();
 
@@ -79,16 +78,13 @@ export class TickManager {
     // Clear any existing timer
     if (this.saveTimeout) {
         clearTimeout(this.saveTimeout);
-        console.log('clear timeout');
     }
 
     // Set a new 5-second timer
     this.saveTimeout = setTimeout(() => {
         this.objectManager.savePoolsToDisk();
-        console.log('execute timeout');
         this.saveTimeout = null; // optional: helps debugging
         this.anyDirty = false;
     }, this.interval);
-    console.log('timeout set');
   }
 }

@@ -234,7 +234,6 @@ export class ObjectManager {
     const objLongName = `${obj?.class ?? ''} ${obj?.name ?? ''}`.trim().toLowerCase();
 
     if (oldLongName != objLongName) {
-      console.log({oldLongName, objLongName});
       for (const name of objLongName.split(' ').filter(Boolean)) {
         this.pools.name.set(name, obj.id);
       }
@@ -267,7 +266,7 @@ export class ObjectManager {
   savePoolsToDisk() {
 
     const caller = this.utils.getImmediateCaller();
-    console.log(caller, '--- save pool ---');
+    // console.log(caller, '--- save pool ---');
     // save changed pools to disk
     for (const pool of Object.values(this.pools)) {
       pool.saveDirty();

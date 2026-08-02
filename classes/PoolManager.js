@@ -82,14 +82,13 @@ export class PoolManager {
     }
     const isEmpty = this.pool.deleteValue(oldKey, thing);
     if (isEmpty) {
-      console.log(`delete old loc=${oldKey} id=${thing} isEmpty=`, isEmpty);
+      // console.log(`delete old loc=${oldKey} id=${thing} isEmpty=`, isEmpty);
       this.dirtyDeleted.add(oldKey);
           this.tickManager.anyDirty = true;
     } else {
       this.dirtyUpdated.add(oldKey);
           this.tickManager.anyDirty = true;
     }
-    console.log('anyDirty', this.tickManager.anyDirty);
   }
 
   /**

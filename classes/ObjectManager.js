@@ -219,8 +219,6 @@ export class ObjectManager {
   addToPools(obj, old) {
     // if there is already an obj, we maybe changing existing values like its loc from one to another
     // so clear from all pools
-
-
     if (obj.code) {
       this.pools.code.set(obj.id, { id: obj.id, loc: obj.loc, code: obj.code }, null, true);
       this.addTriggers(obj);
@@ -232,11 +230,18 @@ export class ObjectManager {
     }
     this.formatObject(obj);
     this.pools.id.set(obj.id, obj, null, true);
-    if (obj.name) {
-      this.pools.name.set(obj.name.toLocaleLowerCase(), obj.id);
+    const oldLongName = `${old?.class ?? ''} ${old?.name ?? ''}`.trim().toLowerCase();
+    const objLongName = `${obj?.class ?? ''} ${obj?.name ?? ''}`.trim().toLowerCase();
+
+    if (oldLongName != objLongName) {
+      console.log({oldLongName, objLongName});
+      for (const name of objLongName.split(' ').filter(Boolean)) {
+        this.pools.name.set(name, obj.id);
+      }
     }
-    this.pools.name.set(obj.class.toLocaleLowerCase(), obj.id);
-    this.pools.loc.set(obj.loc, obj.id, old?.loc);
+    if (!old || obj.loc !== old.loc) {
+      this.pools.loc.set(obj.loc, obj.id, old?.loc);
+    }
   }
 
   /**

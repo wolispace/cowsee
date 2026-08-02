@@ -561,6 +561,7 @@ export class CommandManager extends Queue {
 
       const obj = this.resolveObj(match[1].trim());
       if (!obj) return;
+      const oldObj = { ...obj };
 
       const params = match[2];
       // TODO: if params == 'xyz' we only clear those
@@ -570,7 +571,7 @@ export class CommandManager extends Queue {
       // TODO: clear the x, y and z and maybe other positional things
 
       // Save the updated object
-      this.tickManager.objectManager.save(obj);
+      this.tickManager.objectManager.save(obj, oldObj);
     },
 
     // SAY handler
@@ -660,10 +661,11 @@ export class CommandManager extends Queue {
       for (const subId of hosted) {
         const sub = this.tickManager.objectManager.getById(subId);
         if (!sub) continue;
+        const oldObj = { ...sub };
         sub.host = '';
         sub.hosthow = '';
         sub.pose = '';
-        this.tickManager.objectManager.save(sub);
+        this.tickManager.objectManager.save(sub, oldObj);
       }
     },
 

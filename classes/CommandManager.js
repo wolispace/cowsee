@@ -585,6 +585,8 @@ export class CommandManager extends Queue {
 
       this.tickManager.messageManager.add({
         msg,
+        brief: true,
+        objs: this.objs,
         context: { ...this.context }
       });
     },

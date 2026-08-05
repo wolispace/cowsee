@@ -14,6 +14,10 @@ export class TextUtils {
         if (prop === 'longname' && id === data.playerId) {
           val = `${obj.name} (you)`;
         }
+        // TODO: something in the context dictates "a bus" or "the bus"
+        // if (['pus','drop','pose','paint'].includes(data.context.trigger)) {
+        //   val = `the ${obj.longname}`;
+        // }
 
         if (!['longname', 'name', 'shorname', 'plural'].includes(prop)) {
           return val;

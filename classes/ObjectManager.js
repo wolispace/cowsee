@@ -281,6 +281,8 @@ export class ObjectManager {
    */
   prepContext(data) {
     data.objs = data.objs ?? {};
+
+    
     // Phase 1: Process [$var] (bracketed = linkable objects)
     data.msg = data.msg.replace(/\[\$(\w+)\]/g, (_, varName) => {
       const value = data.context[varName] ?? '';
@@ -304,6 +306,15 @@ export class ObjectManager {
       }
       return value; // plain text: substitute literally
     });
+
+    // TODO: trying to make "the cup" instead of "a cup" but its not getting obj.class
+    if (data.brief) {
+      for (const obj of Object.entries(data.objs)) {
+        obj.longname = `the ${obj.class}`;
+        //console.log(obj.longname);
+      }
+      //console.log(data.objs);
+    }
   }
 
   /**
